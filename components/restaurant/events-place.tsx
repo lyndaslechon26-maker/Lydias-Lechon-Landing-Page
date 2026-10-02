@@ -171,8 +171,8 @@ export function EventsPlace() {
         {/* Main Venue Showcase */}
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-10 mb-8">
           
-          {/* LEFT: Image Gallery */}
-          <div className="space-y-4">
+          {/* LEFT: Image Gallery + Amenities */}
+          <div className="space-y-6">
             {/* Main Large Image */}
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl group">
               <img 
@@ -181,26 +181,52 @@ export function EventsPlace() {
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              {/* Gradient overlay - stronger at bottom for amenities */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               
               {/* Featured Badge */}
-              <div className="absolute top-4 left-4 px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center gap-2">
+              <div className="absolute top-4 left-4 px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center gap-2 z-30">
                 <Sparkles className="size-3" />
                 FEATURED VENUE
+              </div>
+
+              {/* Amenities Overlay - Bottom Section */}
+              <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
+                <h4 className="text-white text-sm font-semibold mb-3 flex items-center gap-2">
+                  <Check className="size-4 text-green-400" />
+                  Included Amenities
+                </h4>
+                <div className="grid grid-cols-3 gap-2">
+                  {amenities.slice(0, 6).map((amenity: string, index: number) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center gap-2 text-white/90 text-xs bg-white/10 backdrop-blur-md rounded-lg px-3 py-2 border border-white/20"
+                    >
+                      <div className="size-5 rounded-full bg-green-400/20 flex items-center justify-center flex-shrink-0">
+                        <Check className="size-3 text-green-400" />
+                      </div>
+                      <span className="truncate">{amenity}</span>
+                    </div>
+                  ))}
+                </div>
+                {amenities.length > 6 && (
+                  <p className="text-white/70 text-xs mt-2">
+                    + {amenities.length - 6} more amenities
+                  </p>
+                )}
               </div>
 
               {/* Navigation Arrows */}
               <button
                 onClick={prevSlide}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/95 dark:bg-slate-800/95 shadow-xl flex items-center justify-center hover:scale-110 transition-all z-20"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/95 dark:bg-slate-800/95 shadow-xl flex items-center justify-center hover:scale-110 transition-all z-30"
                 aria-label="Previous venue"
               >
                 <ChevronLeft className="size-5 text-slate-900 dark:text-white" />
               </button>
               <button
                 onClick={nextSlide}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/95 dark:bg-slate-800/95 shadow-xl flex items-center justify-center hover:scale-110 transition-all z-20"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/95 dark:bg-slate-800/95 shadow-xl flex items-center justify-center hover:scale-110 transition-all z-30"
                 aria-label="Next venue"
               >
                 <ChevronRight className="size-5 text-slate-900 dark:text-white" />
@@ -230,7 +256,7 @@ export function EventsPlace() {
           </div>
 
           {/* RIGHT: Venue Details */}
-          <div className="space-y-6 flex flex-col justify-between">
+          <div className="space-y-6">
             
             {/* Venue Name & Rating */}
             <div>
@@ -270,27 +296,6 @@ export function EventsPlace() {
               <p className="text-muted-foreground leading-relaxed">
                 {currentSpace.description}
               </p>
-            </div>
-
-            {/* Amenities */}
-            <div className="flex-1">
-              <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                <Check className="size-5 text-green-600" />
-                Included Amenities
-              </h4>
-              <div className="grid grid-cols-1 gap-2 max-h-[280px] overflow-y-auto pr-2 scrollbar-thin">
-                {amenities.map((amenity: string, index: number) => (
-                  <div 
-                    key={index} 
-                    className="flex items-center gap-3 text-sm p-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors"
-                  >
-                    <div className="size-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                      <Check className="size-3.5 text-green-600 dark:text-green-500" />
-                    </div>
-                    <span>{amenity}</span>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* Pricing */}
