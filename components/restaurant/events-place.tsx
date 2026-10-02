@@ -169,12 +169,12 @@ export function EventsPlace() {
         </FadeUp>
 
         {/* Main Venue Showcase */}
-        <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8 lg:gap-12 mb-8">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-10 mb-8">
           
           {/* LEFT: Image Gallery */}
           <div className="space-y-4">
             {/* Main Large Image */}
-            <div className="relative aspect-[16/10] rounded-2xl overflow-hidden shadow-2xl group">
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl group">
               <img 
                 src={venueImages[selectedImageIndex] || currentSpace.image_url}
                 alt={currentSpace.name}
@@ -230,7 +230,7 @@ export function EventsPlace() {
           </div>
 
           {/* RIGHT: Venue Details */}
-          <div className="lg:sticky lg:top-24 h-fit space-y-6">
+          <div className="space-y-6 flex flex-col justify-between">
             
             {/* Venue Name & Rating */}
             <div>
@@ -273,13 +273,13 @@ export function EventsPlace() {
             </div>
 
             {/* Amenities */}
-            <div>
+            <div className="flex-1">
               <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
                 <Check className="size-5 text-green-600" />
                 Included Amenities
               </h4>
-              <div className="grid grid-cols-1 gap-2">
-                {amenities.slice(0, 6).map((amenity: string, index: number) => (
+              <div className="grid grid-cols-1 gap-2 max-h-[280px] overflow-y-auto pr-2 scrollbar-thin">
+                {amenities.map((amenity: string, index: number) => (
                   <div 
                     key={index} 
                     className="flex items-center gap-3 text-sm p-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors"
@@ -291,11 +291,6 @@ export function EventsPlace() {
                   </div>
                 ))}
               </div>
-              {amenities.length > 6 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  + {amenities.length - 6} more amenities
-                </p>
-              )}
             </div>
 
             {/* Pricing */}
