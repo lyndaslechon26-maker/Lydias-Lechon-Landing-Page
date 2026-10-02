@@ -7,7 +7,7 @@ export function OurStory() {
       {/* Background Image */}
       <div className="absolute inset-0">
         <img 
-          src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1600&q=80" 
+          src="/OurStory.png" 
           alt="Our Story Background" 
           className="w-full h-full object-cover blur-sm"
         />
@@ -72,9 +72,9 @@ export function OurStory() {
           {/* Right Side - Image */}
           <SlideRight className="order-1 lg:order-2">
           <div className="relative aspect-[3/4] rounded-xl sm:rounded-2xl overflow-hidden group bg-slate-800">
-            {/* Portrait Image - Using placeholder until actual image is uploaded */}
+            {/* Portrait Image */}
             <img 
-              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&q=80" 
+              src="/lydia-portrait.png" 
               alt="Lydia De Roca" 
               className="absolute inset-0 w-full h-full object-cover"
             />
@@ -82,7 +82,7 @@ export function OurStory() {
             {/* Subtle Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             
-            {/* Optional: Add text overlay */}
+            {/* Text overlay */}
             <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
               <p className="text-white text-lg font-bold">Lydia De Roca</p>
               <p className="text-slate-200 text-sm">Founder, Lydia's Lechon</p>

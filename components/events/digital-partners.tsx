@@ -1,28 +1,37 @@
 'use client'
 
 import { ScrollReveal } from '@/components/ui/scroll-reveal'
+import { Bike, ShoppingBag, Wallet, CreditCard } from 'lucide-react'
 
 export function DigitalPartners() {
   const partners = [
     {
       name: "Foodpanda",
       logo: "/foodpanda.png",
-      alt: "Foodpanda"
+      icon: Bike,
+      alt: "Foodpanda",
+      color: "from-pink-500 to-pink-600"
     },
     {
       name: "GrabFood",
       logo: "/grab.png",
-      alt: "GrabFood"
+      icon: ShoppingBag,
+      alt: "GrabFood",
+      color: "from-green-500 to-emerald-600"
     },
     {
       name: "Maya",
       logo: "/maya.png",
-      alt: "Maya"
+      icon: Wallet,
+      alt: "Maya",
+      color: "from-blue-500 to-cyan-600"
     },
     {
       name: "GCash",
       logo: "/gcash1.png",
-      alt: "GCash"
+      icon: CreditCard,
+      alt: "GCash",
+      color: "from-blue-600 to-indigo-600"
     }
   ]
 
@@ -113,20 +122,25 @@ export function DigitalPartners() {
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-cyan-500/20 group-hover:via-purple-500/20 group-hover:to-pink-500/20 blur-xl transition-all duration-300"></div>
 
               {/* Logo */}
-              <div className="relative z-10">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+              <div className="relative z-10 flex flex-col items-center gap-2">
+                {/* Try to load image first */}
                 <img 
                   src={partner.logo}
                   alt={partner.alt}
                   className="h-12 sm:h-16 w-auto object-contain filter drop-shadow-lg group-hover:drop-shadow-2xl transition-all duration-300"
                   onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                    const fallback = e.currentTarget.nextElementSibling as HTMLElement
-                    if (fallback) fallback.style.display = 'block'
+                    const target = e.currentTarget as HTMLImageElement
+                    target.style.display = 'none'
+                    const fallback = target.nextElementSibling as HTMLElement
+                    if (fallback) fallback.style.display = 'flex'
                   }}
                 />
-                <div className="hidden text-xl font-bold text-white">
-                  {partner.name}
+                {/* Fallback to icon + text if image doesn't exist */}
+                <div className="hidden flex-col items-center gap-2">
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${partner.color}`}>
+                    <partner.icon className="h-8 w-8 text-white" />
+                  </div>
+                  <span className="text-sm font-semibold text-white">{partner.name}</span>
                 </div>
               </div>
             </div>
