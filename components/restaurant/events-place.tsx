@@ -30,11 +30,59 @@ export function EventsPlace() {
       const { data, error } = await supabase
         .from('event_venues')
         .select('*')
-        .eq('is_active', true)
+        .eq('is_available', true)
         .order('created_at', { ascending: false })
 
-      if (data && !error) {
+      if (data && !error && data.length > 0) {
         setEventSpaces(data)
+      } else {
+        // Fallback data if no venues in database
+        setEventSpaces([
+          {
+            id: '1',
+            name: 'Grand Ballroom',
+            capacity: 200,
+            location: 'Main Building',
+            description: 'Our spacious ballroom perfect for weddings, corporate events, and grand celebrations',
+            image_url: 'https://images.unsplash.com/photo-1519167758481-83f29da8a77a?w=800&q=80',
+            amenities: ['Air-conditioned', 'Sound system', 'LED projector', 'Stage', 'Bridal room', 'Catering kitchen'],
+            features: ['Air-conditioned', 'Sound system', 'LED projector', 'Stage'],
+            is_active: true
+          },
+          {
+            id: '2',
+            name: 'Garden Pavilion',
+            capacity: 150,
+            location: 'Outdoor Area',
+            description: 'Beautiful outdoor venue with lush greenery and natural ambiance',
+            image_url: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&q=80',
+            amenities: ['Garden setting', 'String lights', 'Wooden tables', 'Open-air setup', 'Photo spots'],
+            features: ['Garden setting', 'String lights', 'Wooden tables'],
+            is_active: true
+          },
+          {
+            id: '3',
+            name: 'Rooftop Deck',
+            capacity: 100,
+            location: 'Rooftop',
+            description: 'Modern rooftop venue with stunning city views',
+            image_url: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?w=800&q=80',
+            amenities: ['City view', 'Retractable roof', 'Modern fixtures', 'Bar counter', 'Lounge area'],
+            features: ['City view', 'Retractable roof', 'Modern fixtures'],
+            is_active: true
+          },
+          {
+            id: '4',
+            name: 'Function Room A',
+            capacity: 50,
+            location: 'Second Floor',
+            description: 'Intimate space perfect for small gatherings and birthday parties',
+            image_url: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&q=80',
+            amenities: ['Air-conditioned', 'TV screen', 'Mini sound system', 'Flexible setup'],
+            features: ['Air-conditioned', 'TV screen', 'Mini sound system'],
+            is_active: true
+          }
+        ])
       }
       setLoading(false)
     }
@@ -43,24 +91,11 @@ export function EventsPlace() {
   }, [])
 
   if (loading) {
-    return (
-      <section className="relative py-12 sm:py-16 overflow-hidden bg-slate-900">
-        <div className="container mx-auto px-4 text-center text-white">
-          <p>Loading venues...</p>
-        </div>
-      </section>
-    )
+    return null
   }
 
   if (eventSpaces.length === 0) {
-    return (
-      <section className="relative py-12 sm:py-16 overflow-hidden bg-slate-900">
-        <div className="container mx-auto px-4 text-center text-white">
-          <p className="text-amber-400 mb-2">No venues available</p>
-          <p className="text-slate-300">Please check back later</p>
-        </div>
-      </section>
-    )
+    return null
   }
 
   const currentSpace = eventSpaces[currentIndex]
