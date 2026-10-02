@@ -36,14 +36,62 @@ export function FoodCategories() {
     async function fetchFoodCategories() {
       const supabase = createClient()
       const { data, error } = await supabase
-        .from('categories')
-        .select('id, name, description, image_url, sort_order, is_active')
+        .from('menu_categories')
+        .select('id, name, description, display_order, is_active')
         .in('name', foodBundleCategories)
         .eq('is_active', true)
-        .order('sort_order', { ascending: true })
+        .order('display_order', { ascending: true })
 
-      if (data && !error) {
-        setCategories(data)
+      if (data && !error && data.length > 0) {
+        setCategories(data.map(cat => ({
+          ...cat,
+          image_url: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80',
+          sort_order: cat.display_order
+        })))
+      } else {
+        // Fallback data if no categories in database
+        setCategories([
+          {
+            id: '1',
+            name: 'Lechon',
+            description: 'Our signature roasted pig - perfect for celebrations',
+            image_url: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&q=80',
+            sort_order: 1,
+            is_active: true
+          },
+          {
+            id: '2',
+            name: 'Quick Meals',
+            description: 'Ready-to-eat Filipino favorites for busy days',
+            image_url: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80',
+            sort_order: 2,
+            is_active: true
+          },
+          {
+            id: '3',
+            name: 'Party Trays',
+            description: 'Large serving sizes of Filipino dishes good for parties and gatherings',
+            image_url: 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=800&q=80',
+            sort_order: 3,
+            is_active: true
+          },
+          {
+            id: '4',
+            name: 'Family Boxes',
+            description: 'Complete meal bundles perfect for family dinners',
+            image_url: 'https://images.unsplash.com/photo-1603073363-e04e9b0ca9f5?w=800&q=80',
+            sort_order: 4,
+            is_active: true
+          },
+          {
+            id: '5',
+            name: 'Bento Box',
+            description: 'Individual meal boxes with rice and sides',
+            image_url: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?w=800&q=80',
+            sort_order: 5,
+            is_active: true
+          }
+        ])
       }
       setLoading(false)
     }
@@ -60,11 +108,15 @@ export function FoodCategories() {
   }
 
   if (loading) {
-    return null
-  }
-
-  if (categories.length === 0) {
-    return null
+    return (
+      <section className="py-2 pb-12 sm:py-4 sm:pb-16 bg-slate-50 dark:bg-slate-900">
+        <div className="mx-auto px-8 lg:px-20 max-w-[1600px]">
+          <div className="text-center py-20">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </section>
+    )
   }
 
   return (
