@@ -10,15 +10,22 @@ export async function SignatureDishes() {
     .order('price', { ascending: false })
     .limit(10)
 
-  const dishes = menuItems?.map((item, index) => ({
-    id: item.id,
-    name: item.name,
-    description: item.description || 'Delicious dish',
-    price: item.price,
-    image: item.image_url || `https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80`,
-    category: item.category?.name || 'Main Course',
-    isBestSeller: index === 0
-  })) || []
+  const dishes = menuItems?.map((item, index) => {
+    // Handle category which might be an array from the join
+    const categoryName = Array.isArray(item.category) 
+      ? item.category[0]?.name 
+      : (item.category as any)?.name || 'Main Course'
+    
+    return {
+      id: item.id,
+      name: item.name,
+      description: item.description || 'Delicious dish',
+      price: item.price,
+      image: item.image_url || `https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80`,
+      category: categoryName,
+      isBestSeller: index === 0
+    }
+  }) || []
 
   return <SignatureDishesClient dishes={dishes} />
 }

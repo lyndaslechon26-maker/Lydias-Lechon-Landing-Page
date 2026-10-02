@@ -21,8 +21,9 @@ import { Button } from "@/components/ui/button"
 import { BookingTimeline } from "@/components/events/dashboard/booking-timeline"
 import { PaymentUpload } from "@/components/events/dashboard/payment-upload"
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
-  const { booking } = await getBooking(params.id)
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const { booking } = await getBooking(id)
   
   if (!booking) {
     return { title: "Booking Not Found" }
@@ -56,9 +57,10 @@ const eventTypeLabels: Record<string, string> = {
   other: "Other Event",
 }
 
-export default async function BookingDetailPage({ params }: { params: { id: string } }) {
+export default async function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const customer = await requireAuth()
-  const { booking, error } = await getBooking(params.id)
+  const { id } = await params
+  const { booking, error } = await getBooking(id)
 
   if (error || !booking) {
     notFound()
