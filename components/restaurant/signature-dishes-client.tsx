@@ -24,11 +24,11 @@ export function SignatureDishesClient({ dishes }: SignatureDishesProps) {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null)
   
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % (dishes.length - 2))
+    setCurrentIndex((prev) => (prev + 1) % dishes.length)
   }
   
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + (dishes.length - 2)) % (dishes.length - 2))
+    setCurrentIndex((prev) => (prev - 1 + dishes.length) % dishes.length)
   }
 
   const openModal = (dish: Dish) => {

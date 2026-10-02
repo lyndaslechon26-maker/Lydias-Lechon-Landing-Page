@@ -100,11 +100,11 @@ export function FoodCategories() {
   }, [])
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % (categories.length - 2))
+    setCurrentIndex((prev) => (prev + 1) % categories.length)
   }
   
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + (categories.length - 2)) % (categories.length - 2))
+    setCurrentIndex((prev) => (prev - 1 + categories.length) % categories.length)
   }
 
   if (loading) {
