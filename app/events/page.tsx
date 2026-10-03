@@ -20,7 +20,6 @@ import { MomentsGallery } from "@/components/restaurant/moments-gallery"
 import { EventsPlace } from "@/components/restaurant/events-place"
 import { FoodCategories } from "@/components/restaurant/food-categories"
 import { ValueSection } from "@/components/restaurant/value-section"
-import { BookingForm } from "@/components/restaurant/booking-form"
 import { WaveDivider } from "@/components/ui/wave-divider"
 import { FadeUp, ScaleFade } from "@/components/ui/scroll-animations"
 import { GoldDivider } from "@/components/ui/gold-divider"
@@ -274,11 +273,6 @@ export default async function EventsLandingPage() {
       <FadeUp>
         <FAQSection />
       </FadeUp>
-
-      {/* Booking Form 🆕 */}
-      <ScaleFade>
-        <BookingForm />
-      </ScaleFade>
 
       {/* Final CTA Section ✅ */}
       <FadeUp>
