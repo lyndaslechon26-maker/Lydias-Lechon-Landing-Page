@@ -28,7 +28,7 @@ export default async function ManagerLayout({
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="flex h-screen bg-slate-50">
       {/* Sidebar */}
       <ManagerSidebar userRole={userData.role} userName={userData.full_name} />
       
@@ -36,8 +36,10 @@ export default async function ManagerLayout({
       <div className="flex-1 flex flex-col overflow-hidden">
         <ManagerHeader userName={userData.full_name} />
         
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
+        <main className="flex-1 overflow-y-auto p-8 bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/30">
+          <div className="max-w-[1600px] mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>
