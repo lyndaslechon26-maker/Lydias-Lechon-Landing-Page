@@ -43,7 +43,7 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        // Check user role from profiles table
+        // First, check user role from profiles table
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("role")
@@ -57,28 +57,20 @@ export default function LoginPage() {
             router.refresh()
             return
           }
+          
+          // If customer role, redirect to customer dashboard
+          if (profile.role === 'customer') {
+            router.push("/events/dashboard")
+            router.refresh()
+            return
+          }
         }
 
-        // Check if user has event customer profile
-        const { data: customer, error: customerError } = await supabase
-          .from("event_customers")
-          .select("id")
-          .eq("auth_id", data.user.id)
-          .maybeSingle()
-
-        if (customer) {
-          // Redirect to customer dashboard
-          router.push("/events/dashboard")
-          router.refresh()
-        } else {
-          // No customer profile found - this might be a staff account
-          await supabase.auth.signOut() // Sign out to clear session
-          setError(
-            "This account is not registered as a customer. " +
-            "If you're a staff member, please use the staff login at /login. " +
-            "If you're a customer, please create an account first."
-          )
-        }
+        // Fallback: If no profile found, sign out
+        await supabase.auth.signOut()
+        setError(
+          "Your account role is not configured. Please contact support."
+        )
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.")
