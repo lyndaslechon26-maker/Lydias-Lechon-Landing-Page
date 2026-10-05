@@ -104,9 +104,11 @@ export function EventsNavbar() {
   ]
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="fixed top-0 left-0 right-0 z-50 pt-3 pb-0">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+        {/* Rounded Container - Centered with padding from edges */}
+        <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border rounded-full shadow-lg px-6">
+          <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/events" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg">
@@ -222,10 +224,12 @@ export function EventsNavbar() {
             </button>
           </div>
         </div>
+        </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu - Outside rounded container */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 space-y-2 border-t animate-in slide-in-from-top-5">
+          <div className="md:hidden mt-2 bg-background/95 backdrop-blur border rounded-2xl shadow-lg animate-in slide-in-from-top-5">
+            <div className="py-4 space-y-2">
             {navLinks.map((link) => (
               link.isScroll ? (
                 <button
@@ -293,6 +297,7 @@ export function EventsNavbar() {
                   )}
                 </>
               )}
+            </div>
             </div>
           </div>
         )}

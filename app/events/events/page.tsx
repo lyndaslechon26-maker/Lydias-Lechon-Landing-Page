@@ -97,7 +97,7 @@ export default async function EventsLandingPage() {
 
     <div className="flex flex-col">
       {/* Hero Section - Content on Left Side */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0">
           <img 
