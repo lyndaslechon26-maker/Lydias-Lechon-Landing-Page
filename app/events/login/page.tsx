@@ -43,16 +43,21 @@ export default function LoginPage() {
       }
 
       if (data.user) {
+        console.log("Logged in user ID:", data.user.id)
+        
         // First, check user role from profiles table
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("role")
+          .select("role, id, email")
           .eq("id", data.user.id)
           .maybeSingle()
+
+        console.log("Profile lookup result:", profile, profileError)
 
         if (profile) {
           // If landing_page_manager, redirect to manager dashboard
           if (profile.role === 'landing_page_manager') {
+            console.log("Redirecting to manager dashboard")
             router.push("/manager")
             router.refresh()
             return
@@ -60,17 +65,30 @@ export default function LoginPage() {
           
           // If customer role, redirect to customer dashboard
           if (profile.role === 'customer') {
+            console.log("Redirecting to customer dashboard")
             router.push("/events/dashboard")
             router.refresh()
             return
           }
         }
 
-        // Fallback: If no profile found, sign out
+        // If no profile or unknown role, provide helpful error
         await supabase.auth.signOut()
-        setError(
-          "Your account role is not configured. Please contact support."
-        )
+        
+        if (profileError) {
+          console.error("Profile error:", profileError)
+          setError(
+            `Database error: ${profileError.message}. Please contact support.`
+          )
+        } else if (!profile) {
+          setError(
+            "No profile found for your account. Your auth ID is: " + data.user.id.substring(0, 8) + "... Please add this to the profiles table."
+          )
+        } else {
+          setError(
+            `Unknown role: ${profile.role}. Please contact support.`
+          )
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.")
