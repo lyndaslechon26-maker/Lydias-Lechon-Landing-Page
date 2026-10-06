@@ -68,6 +68,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_event_menu_packages_updated_at ON public.event_menu_packages;
+
 CREATE TRIGGER update_event_menu_packages_updated_at
     BEFORE UPDATE ON public.event_menu_packages
     FOR EACH ROW
