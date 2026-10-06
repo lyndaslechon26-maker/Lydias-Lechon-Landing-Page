@@ -46,6 +46,8 @@ export default async function ManagerPackagesPage() {
   const inactivePackages = packages?.filter((p) => !p.is_active) || []
   const featuredPackages = activePackages.filter((p) => p.is_featured)
 
+  type EventPackage = typeof activePackages[number]
+
   // Group by event type
   const packagesByType = activePackages.reduce((acc, pkg) => {
     if (!acc[pkg.event_type]) {
@@ -53,7 +55,7 @@ export default async function ManagerPackagesPage() {
     }
     acc[pkg.event_type].push(pkg)
     return acc
-  }, {} as Record<string, typeof activePackages>)
+  }, {} as Record<string, EventPackage[]>)
 
   return (
     <div className="space-y-6 bg-white dark:bg-zinc-950">
@@ -129,7 +131,7 @@ export default async function ManagerPackagesPage() {
           </Link>
         </div>
       ) : (
-        Object.entries(packagesByType).map(([eventType, pkgs]) => (
+        (Object.entries(packagesByType) as [string, EventPackage[]][]).map(([eventType, pkgs]) => (
           <div key={eventType} className="space-y-4">
             <h2 className="text-xl font-bold capitalize flex items-center gap-2">
               {eventType.replace("_", " ")} Packages

@@ -58,12 +58,14 @@ export default async function ManagerMenuPackagesPage() {
   const activePackages = menuPackages?.filter((p) => p.is_active) || []
   const inactivePackages = menuPackages?.filter((p) => !p.is_active) || []
 
+  type MenuPackage = typeof activePackages[number]
+
   // Group by category
   const byCategory = activePackages.reduce((acc, pkg) => {
     if (!acc[pkg.category]) acc[pkg.category] = []
     acc[pkg.category].push(pkg)
     return acc
-  }, {} as Record<string, typeof activePackages>)
+  }, {} as Record<string, MenuPackage[]>)
 
   return (
     <div className="space-y-6 bg-white dark:bg-zinc-950">
@@ -133,7 +135,7 @@ export default async function ManagerMenuPackagesPage() {
           </Link>
         </div>
       ) : (
-        Object.entries(byCategory).map(([category, packages]) => {
+        (Object.entries(byCategory) as [string, MenuPackage[]][]).map(([category, packages]) => {
           const Icon = categoryIcons[category as keyof typeof categoryIcons]
           const colorClass = categoryColors[category as keyof typeof categoryColors]
           
@@ -148,7 +150,7 @@ export default async function ManagerMenuPackagesPage() {
               </div>
 
               <div className="grid gap-6 lg:grid-cols-2 xl:gap-8">
-                {(packages as any[]).map((pkg) => (
+                {packages.map((pkg) => (
                   <div
                     key={pkg.id}
                     className="p-6 rounded-xl border-2 bg-card shadow-md hover:shadow-xl hover:border-amber-300 transition-all duration-300 hover:-translate-y-2"
