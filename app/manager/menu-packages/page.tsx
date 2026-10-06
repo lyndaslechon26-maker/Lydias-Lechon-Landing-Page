@@ -148,7 +148,7 @@ export default async function ManagerMenuPackagesPage() {
               </div>
 
               <div className="grid gap-6 lg:grid-cols-2 xl:gap-8">
-                {packages.map((pkg) => (
+                {(packages as any[]).map((pkg) => (
                   <div
                     key={pkg.id}
                     className="p-6 rounded-xl border-2 bg-card shadow-md hover:shadow-xl hover:border-amber-300 transition-all duration-300 hover:-translate-y-2"
