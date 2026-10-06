@@ -40,6 +40,7 @@ const routes = [
     section: 'Content Management',
     items: [
       { href: '/manager/menu', label: 'Menu Items', icon: UtensilsCrossed },
+      { href: '/manager/menu-packages', label: 'Menu Packages', icon: ChefHat },
       { href: '/manager/venues', label: 'Venues', icon: MapPin },
       { href: '/manager/packages', label: 'Event Packages', icon: Package },
       { href: '/manager/gallery', label: 'Gallery', icon: Image },
