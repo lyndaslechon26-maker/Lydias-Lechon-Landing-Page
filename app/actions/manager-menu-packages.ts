@@ -12,10 +12,8 @@ export async function createMenuPackage(data: {
   category: string
   description?: string
   price_per_person: number
-  min_order: number
-  items: Array<{ name: string; description?: string; is_signature?: boolean }>
-  dietary_info?: Record<string, boolean>
-  photo?: string
+  min_guests: number
+  items: string[]
   is_active: boolean
 }) {
   const supabase = await createClient()
@@ -36,10 +34,8 @@ export async function createMenuPackage(data: {
       category: data.category,
       description: data.description || null,
       price_per_person: data.price_per_person,
-      min_order: data.min_order,
+      min_guests: data.min_guests,
       items: data.items || [],
-      dietary_info: data.dietary_info || {},
-      photo: data.photo || null,
       is_active: data.is_active,
       sort_order: nextSortOrder,
     })
@@ -60,10 +56,8 @@ export async function updateMenuPackage(
     category: string
     description?: string
     price_per_person: number
-    min_order: number
-    items: Array<{ name: string; description?: string; is_signature?: boolean }>
-    dietary_info?: Record<string, boolean>
-    photo?: string
+    min_guests: number
+    items: string[]
     is_active: boolean
   }
 ) {
@@ -76,10 +70,8 @@ export async function updateMenuPackage(
       category: data.category,
       description: data.description || null,
       price_per_person: data.price_per_person,
-      min_order: data.min_order,
+      min_guests: data.min_guests,
       items: data.items || [],
-      dietary_info: data.dietary_info || {},
-      photo: data.photo || null,
       is_active: data.is_active,
     })
     .eq("id", id)
