@@ -84,7 +84,7 @@ export default async function BookingsPage({
       />
 
       {/* KPI Row */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Total Bookings"
           value={stats.totalBookings.toString()}
@@ -108,6 +108,8 @@ export default async function BookingsPage({
           value={stats.pendingBookings.toString()}
           icon={Clock}
           accent="amber"
+          trend="+0%"
+          trendUp={false}
           subtitle="awaiting confirmation"
         />
         <StatCard

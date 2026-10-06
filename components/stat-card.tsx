@@ -28,35 +28,33 @@ export function StatCard({
   accent?: "emerald" | "blue" | "amber" | "purple" | "rose"
 }) {
   return (
-    <Card className="group p-5 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_1px_0_rgba(255,255,255,0.1)_inset] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.2)_inset]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
+    <Card className="group p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_1px_0_rgba(255,255,255,0.1)_inset] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.2)_inset]">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1 space-y-2">
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
-          {(subtitle || trend) && (
-            <div className="mt-2 flex items-center gap-2">
-              {trend && (
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-0.5 text-xs font-medium",
-                    trendUp ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400",
-                  )}
-                >
-                  {trendUp ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
-                  {trend}
-                </span>
-              )}
-              {subtitle && <span className="text-xs text-muted-foreground">{subtitle}</span>}
-            </div>
-          )}
+          <p className="text-3xl font-bold tracking-tight text-foreground tabular-nums">{value}</p>
+          <div className="flex items-center gap-2 min-h-[20px]">
+            {trend && (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 text-xs font-medium",
+                  trendUp ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400",
+                )}
+              >
+                {trendUp ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+                {trend}
+              </span>
+            )}
+            {subtitle && <span className="text-xs text-muted-foreground">{subtitle}</span>}
+          </div>
         </div>
         <div
           className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-lg",
+            "flex size-12 shrink-0 items-center justify-center rounded-lg transition-transform group-hover:scale-110",
             accent ? ACCENT_BG[accent] : "bg-primary/10 text-primary",
           )}
         >
-          <Icon className="size-5" />
+          <Icon className="size-6" />
         </div>
       </div>
     </Card>
