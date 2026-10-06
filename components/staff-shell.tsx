@@ -37,6 +37,7 @@ import {
   AlertCircle,
   X,
   Loader2,
+  ChefHat,
   type LucideIcon,
 } from "lucide-react"
 
@@ -65,6 +66,7 @@ const ICONS = {
   Star,
   FileText,
   Settings: SettingsIcon,
+  ChefHat,
 } as const satisfies Record<string, LucideIcon>
 
 function initials(name?: string | null) {
