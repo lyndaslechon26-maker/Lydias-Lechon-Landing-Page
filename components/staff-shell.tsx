@@ -1,0 +1,411 @@
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
+import { Brand } from "@/components/brand"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
+import {
+  LogOut,
+  Menu,
+  Search,
+  LayoutDashboard,
+  Calendar,
+  ShoppingCart,
+  Users,
+  UtensilsCrossed,
+  MapPin,
+  Package,
+  Image as ImageIcon,
+  Star,
+  FileText,
+  Settings as SettingsIcon,
+  AlertCircle,
+  X,
+  Loader2,
+  type LucideIcon,
+} from "lucide-react"
+
+export interface NavItem {
+  href: string
+  label: string
+  icon: keyof typeof ICONS
+}
+
+export interface NavSection {
+  label: string
+  items: NavItem[]
+}
+
+export type NavConfig = NavItem[] | NavSection[]
+
+const ICONS = {
+  LayoutDashboard,
+  Calendar,
+  ShoppingCart,
+  Users,
+  UtensilsCrossed,
+  MapPin,
+  Package,
+  Image: ImageIcon,
+  Star,
+  FileText,
+  Settings: SettingsIcon,
+} as const satisfies Record<string, LucideIcon>
+
+function initials(name?: string | null) {
+  if (!name) return "U"
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase()
+}
+
+function NavLinks({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => void }) {
+  const pathname = usePathname()
+  return (
+    <>
+      {items.map((item) => {
+        const active = pathname === item.href
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={cn(
+              "group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              active
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+            )}
+          >
+            {active && (
+              <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-primary" />
+            )}
+            {(() => {
+              const Icon = ICONS[item.icon]
+              return (
+                <Icon
+                  className={cn(
+                    "size-4 shrink-0 transition-colors",
+                    active ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground",
+                  )}
+                />
+              )
+            })()}
+            {item.label}
+          </Link>
+        )
+      })}
+    </>
+  )
+}
+
+function Navigation({ config, onNavigate }: { config: NavConfig; onNavigate?: () => void }) {
+  const isSectioned = config.length > 0 && 'label' in config[0] && 'items' in config[0]
+  
+  if (isSectioned) {
+    const sections = config as NavSection[]
+    return (
+      <>
+        {sections.map((section, index) => (
+          <div key={section.label}>
+            <SidebarSectionLabel>{section.label}</SidebarSectionLabel>
+            <nav className="flex flex-col gap-0.5 px-3">
+              <NavLinks items={section.items} onNavigate={onNavigate} />
+            </nav>
+            {index < sections.length - 1 && (
+              <div className="mx-5 my-3 border-t border-sidebar-border" />
+            )}
+          </div>
+        ))}
+      </>
+    )
+  }
+  
+  return (
+    <>
+      <SidebarSectionLabel>Manager</SidebarSectionLabel>
+      <nav className="flex flex-col gap-0.5 px-3">
+        <NavLinks items={config as NavItem[]} onNavigate={onNavigate} />
+      </nav>
+    </>
+  )
+}
+
+function SidebarFooter({ userName, userRole, onLogoutClick }: { userName?: string | null; userRole?: string; onLogoutClick: () => void }) {
+  return (
+    <div className="border-t border-sidebar-border p-3">
+      <div className="flex items-center gap-3 rounded-md px-2 py-2">
+        <Avatar className="size-8">
+          <AvatarFallback className="bg-sidebar-accent text-xs text-sidebar-accent-foreground">
+            {initials(userName)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1 leading-tight">
+          <div className="truncate text-sm font-medium text-sidebar-foreground">{userName ?? "Manager"}</div>
+          <div className="truncate text-xs text-sidebar-foreground/60">{userRole === 'admin' ? 'Administrator' : 'Landing Page Manager'}</div>
+        </div>
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="size-8 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          aria-label="Sign out"
+          onClick={onLogoutClick}
+        >
+          <LogOut className="size-4" />
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function SidebarSectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="px-5 pb-1.5 pt-3 text-[0.65rem] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+      {children}
+    </div>
+  )
+}
+
+function LiveStatusPill() {
+  return (
+    <div className="hidden items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400 sm:inline-flex">
+      <span className="relative flex size-1.5">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+        <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
+      </span>
+      Live
+    </div>
+  )
+}
+
+function Sidebar({
+  config,
+  userName,
+  userRole,
+  restaurantName,
+  restaurantTagline,
+  restaurantLogo,
+  onLogoutClick,
+}: {
+  config: NavConfig
+  userName?: string | null
+  userRole?: string
+  restaurantName?: string
+  restaurantTagline?: string
+  restaurantLogo?: string | null
+  onLogoutClick: () => void
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="px-5 py-5">
+        <Brand
+          variant="sidebar"
+          name={restaurantName}
+          tagline={restaurantTagline}
+          logoUrl={restaurantLogo}
+        />
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        <Navigation config={config} />
+      </div>
+      <SidebarFooter userName={userName} userRole={userRole} onLogoutClick={onLogoutClick} />
+    </div>
+  )
+}
+
+export function StaffShell({
+  userName,
+  userRole,
+  items,
+  title,
+  children,
+  restaurantName,
+  restaurantTagline,
+  restaurantLogo,
+  searchElement,
+}: {
+  userName?: string | null
+  userRole?: string
+  items: NavConfig
+  title: string
+  children: React.ReactNode
+  restaurantName?: string
+  restaurantTagline?: string
+  restaurantLogo?: string | null
+  searchElement?: React.ReactNode
+}) {
+  const router = useRouter()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  const handleLogoutClick = () => {
+    setShowLogoutDialog(true)
+  }
+
+  const confirmLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      router.push('/events/login')
+      router.refresh()
+    } catch (error) {
+      console.error('Logout error:', error)
+      setIsLoggingOut(false)
+      setShowLogoutDialog(false)
+    }
+  }
+
+  return (
+    <div className="flex min-h-svh bg-background">
+      {/* Desktop sidebar */}
+      <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
+        <Sidebar
+          config={items}
+          userName={userName}
+          userRole={userRole}
+          restaurantName={restaurantName}
+          restaurantTagline={restaurantTagline}
+          restaurantLogo={restaurantLogo}
+          onLogoutClick={handleLogoutClick}
+        />
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Top bar */}
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md md:px-6">
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <Button size="icon" variant="ghost" className="lg:hidden" aria-label="Open menu">
+                <Menu className="size-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 border-sidebar-border bg-sidebar p-0">
+              <SheetTitle className="sr-only">Navigation</SheetTitle>
+              <Sidebar
+                config={items}
+                userName={userName}
+                userRole={userRole}
+                restaurantName={restaurantName}
+                restaurantTagline={restaurantTagline}
+                restaurantLogo={restaurantLogo}
+                onLogoutClick={handleLogoutClick}
+              />
+            </SheetContent>
+          </Sheet>
+
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <h1 className="truncate text-base font-semibold tracking-tight text-foreground">{title}</h1>
+            <LiveStatusPill />
+          </div>
+
+          <div className="hidden flex-1 md:flex md:max-w-md">
+            {searchElement || (
+              <div className="relative w-full">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search bookings, orders, menu..."
+                  className="h-9 pl-8 text-sm"
+                  aria-label="Global search"
+                />
+                <kbd className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 select-none rounded border border-border bg-muted px-1.5 font-mono text-[0.65rem] text-muted-foreground sm:inline-block">
+                  /
+                </kbd>
+              </div>
+            )}
+          </div>
+
+          <ThemeToggle />
+
+          <Avatar className="size-8 lg:hidden">
+            <AvatarFallback className="bg-muted text-xs">
+              {initials(userName)}
+            </AvatarFallback>
+          </Avatar>
+        </header>
+
+        <main className="flex-1 px-4 py-6 md:px-8 md:py-8 bg-white dark:bg-zinc-950">{children}</main>
+      </div>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <LogOut className="size-5 text-amber-600" />
+              Confirm Logout
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="py-4 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to log out of your {userRole === 'admin' ? 'Administrator' : 'Manager'} account?
+            </p>
+            <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="size-4 text-amber-600 dark:text-amber-500 mt-0.5 shrink-0" />
+                <div className="flex-1 text-xs text-amber-800 dark:text-amber-300">
+                  <p className="font-medium mb-1">Before logging out:</p>
+                  <ul className="list-disc list-inside space-y-0.5 text-amber-700 dark:text-amber-400">
+                    <li>Save any unsaved work</li>
+                    <li>Ensure all tasks are completed</li>
+                    <li>Notify your team if necessary</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowLogoutDialog(false)}
+              disabled={isLoggingOut}
+              className="flex-1 sm:flex-none"
+            >
+              <X className="size-4 mr-2" />
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmLogout}
+              disabled={isLoggingOut}
+              className="flex-1 sm:flex-none bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+            >
+              {isLoggingOut ? (
+                <>
+                  <Loader2 className="size-4 mr-2 animate-spin" />
+                  Logging out...
+                </>
+              ) : (
+                <>
+                  <LogOut className="size-4 mr-2" />
+                  Yes, Logout
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
