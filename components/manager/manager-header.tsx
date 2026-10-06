@@ -79,7 +79,7 @@ export function ManagerHeader({ userName }: { userName?: string | null }) {
 
           {/* User Menu */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger>
               <Button variant="ghost" className="gap-3 hover:bg-slate-100 px-2">
                 <Avatar className="size-9 ring-2 ring-amber-500/20">
                   <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white font-semibold">
