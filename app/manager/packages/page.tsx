@@ -1,34 +1,65 @@
 import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
+import Link from "next/link"
+import {
+  Package,
+  Plus,
+  Users,
+  Clock,
+  DollarSign,
+  Edit,
+  Eye,
+  ToggleLeft,
+  ToggleRight,
+  Star,
+  RefreshCw,
+  Download,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/page-header"
 import { StatCard } from "@/components/stat-card"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Package, DollarSign, TrendingUp, Plus, RefreshCw, Download } from "lucide-react"
-import { PackagesTable } from "@/components/manager/packages-table"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
 
-export default async function PackagesPage() {
+export const dynamic = "force-dynamic"
+
+export default async function ManagerPackagesPage() {
   const supabase = await createClient()
+  
+  // Check authentication
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect("/events/login?next=/manager/packages")
 
-  // Fetch event packages
+  // Fetch packages
   const { data: packages, error } = await supabase
     .from("event_packages")
     .select("*")
     .order("created_at", { ascending: false })
 
-  // Calculate stats
-  const totalPackages = packages?.length || 0
-  const activePackages = packages?.filter(p => p.is_active)?.length || 0
-  const avgPrice = packages?.length
-    ? (packages.reduce((sum, p) => sum + Number(p.base_price), 0) / packages.length)
-    : 0
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-destructive">{error.message}</p>
+      </div>
+    )
+  }
+
+  const activePackages = packages?.filter((p) => p.is_active) || []
+  const inactivePackages = packages?.filter((p) => !p.is_active) || []
+  const featuredPackages = activePackages.filter((p) => p.is_featured)
+
+  // Group by event type
+  const packagesByType = activePackages.reduce((acc, pkg) => {
+    if (!acc[pkg.event_type]) {
+      acc[pkg.event_type] = []
+    }
+    acc[pkg.event_type].push(pkg)
+    return acc
+  }, {} as Record<string, typeof activePackages>)
 
   return (
     <div className="space-y-6 bg-white dark:bg-zinc-950">
       <PageHeader
-        title="Event Packages"
-        description="Manage event packages and pricing"
+        title="Package Management"
+        description="Manage your event packages and offerings"
         crumbs={[{ label: "Lydia's Lechon" }, { label: "Manager" }, { label: "Packages" }]}
         actions={
           <>
@@ -40,101 +71,251 @@ export default async function PackagesPage() {
               <Download className="mr-2 size-4" />
               Export
             </Button>
-            <Button size="sm" asChild>
-              <Link href="/manager/packages/new">
-                <Plus className="mr-2 size-4" />
+            <Link href="/manager/packages/new">
+              <Button size="sm" className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700">
+                <Plus className="size-4 mr-2" />
                 Add Package
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </>
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <StatCard 
-          label="Total Packages" 
-          value={totalPackages.toString()} 
-          icon={Package} 
-          accent="blue" 
-          subtitle="all packages" 
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-4">
+        <StatCard
+          label="Total Packages"
+          value={(packages?.length || 0).toString()}
+          icon={Package}
+          accent="blue"
+          subtitle="all packages"
         />
-        <StatCard 
-          label="Active Packages" 
-          value={activePackages.toString()} 
-          icon={TrendingUp} 
-          accent="emerald" 
-          subtitle="available now" 
+        <StatCard
+          label="Active"
+          value={activePackages.length.toString()}
+          icon={ToggleRight}
+          accent="emerald"
+          subtitle="available now"
         />
-        <StatCard 
-          label="Average Price" 
-          value={`₱${avgPrice.toLocaleString()}`} 
-          icon={DollarSign} 
-          accent="purple" 
-          subtitle="per package" 
+        <StatCard
+          label="Featured"
+          value={featuredPackages.length.toString()}
+          icon={Star}
+          accent="amber"
+          subtitle="highlighted"
+        />
+        <StatCard
+          label="Inactive"
+          value={inactivePackages.length.toString()}
+          icon={ToggleLeft}
+          accent="rose"
+          subtitle="not available"
         />
       </div>
 
-      <Card className="transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset]">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle className="text-base font-semibold">All Packages</CardTitle>
-            <CardDescription className="mt-1">{totalPackages} {totalPackages === 1 ? 'package' : 'packages'} total</CardDescription>
-          </div>
-          <Badge variant="outline" className="gap-1.5">
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
-              <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
-            </span>
-            Live
-          </Badge>
-        </CardHeader>
-        <CardContent className="pt-6">
-          {error ? (
-            <EmptyState 
-              icon={<Package className="size-8" />} 
-              title="Error loading packages" 
-              description={error.message} 
-            />
-          ) : packages && packages.length > 0 ? (
-            <PackagesTable packages={packages} />
-          ) : (
-            <EmptyState
-              icon={<Package className="size-8" />}
-              title="No packages yet"
-              description="Add your first event package to get started"
-              action={
-                <Button asChild>
-                  <Link href="/manager/packages/new">
-                    <Plus className="mr-2 size-4" />
-                    Add Package
-                  </Link>
-                </Button>
-              }
-            />
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
+      {/* Packages by Event Type */}
+      {activePackages.length === 0 ? (
+        <div className="text-center py-16 border rounded-2xl bg-muted/30">
+          <Package className="size-16 text-muted-foreground/30 mx-auto mb-4" />
+          <h3 className="text-xl font-bold mb-2">No active packages</h3>
+          <p className="text-muted-foreground mb-6">
+            Create your first package to offer to customers
+          </p>
+          <Link href="/manager/packages/new">
+            <Button className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700">
+              <Plus className="size-4 mr-2" />
+              Create Your First Package
+            </Button>
+          </Link>
+        </div>
+      ) : (
+        Object.entries(packagesByType).map(([eventType, pkgs]) => (
+          <div key={eventType} className="space-y-4">
+            <h2 className="text-xl font-bold capitalize flex items-center gap-2">
+              {eventType.replace("_", " ")} Packages
+              <span className="text-sm font-normal text-muted-foreground">
+                ({pkgs.length})
+              </span>
+            </h2>
 
-function EmptyState({ 
-  icon, 
-  title, 
-  description, 
-  action 
-}: { 
-  icon: React.ReactNode
-  title: string
-  description: string
-  action?: React.ReactNode 
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="mb-4 text-muted-foreground">{icon}</div>
-      <h3 className="text-base font-semibold mb-2">{title}</h3>
-      <p className="text-sm text-muted-foreground mb-4 max-w-sm">{description}</p>
-      {action}
+            <div className="grid gap-6 lg:grid-cols-2 xl:gap-8">
+              {pkgs.map((pkg) => (
+                <div
+                  key={pkg.id}
+                  className="p-6 rounded-xl border-2 bg-card shadow-md hover:shadow-xl hover:border-amber-300 transition-all duration-300 hover:-translate-y-2"
+                >
+                  {/* Package Image */}
+                  {pkg.featured_image && (
+                    <div className="mb-4 rounded-lg overflow-hidden">
+                      <img
+                        src={pkg.featured_image}
+                        alt={pkg.name}
+                        className="w-full h-48 object-cover"
+                      />
+                    </div>
+                  )}
+
+                  {/* Package Info */}
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold">{pkg.name}</h3>
+                        {pkg.short_description && (
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                            {pkg.short_description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-1 flex-wrap justify-end">
+                        {pkg.is_featured && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-600 flex items-center gap-1">
+                            <Star className="size-3 fill-current" />
+                            Featured
+                          </span>
+                        )}
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-600">
+                          Active
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-4 pt-3 border-t">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Capacity
+                        </p>
+                        <div className="flex items-center gap-1">
+                          <Users className="size-4 text-amber-600" />
+                          <span className="font-semibold text-sm">
+                            {pkg.min_guests}-{pkg.max_guests}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Duration
+                        </p>
+                        <div className="flex items-center gap-1">
+                          <Clock className="size-4 text-amber-600" />
+                          <span className="font-semibold text-sm">
+                            {pkg.duration_hours}h
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Price
+                        </p>
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="size-4 text-amber-600" />
+                          <span className="font-semibold text-sm">
+                            {pkg.price_per_person
+                              ? `₱${Number(pkg.price_per_person).toLocaleString()}/pax`
+                              : pkg.base_price
+                              ? `₱${Number(pkg.base_price).toLocaleString()}`
+                              : "Custom"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Inclusions Preview */}
+                    {pkg.inclusions && pkg.inclusions.length > 0 && (
+                      <div className="pt-3 border-t">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Inclusions ({pkg.inclusions.length})
+                        </p>
+                        <div className="space-y-1">
+                          {pkg.inclusions.slice(0, 3).map((inc: any, i: number) => (
+                            <p key={i} className="text-xs text-muted-foreground">
+                              • {inc.item}
+                            </p>
+                          ))}
+                          {pkg.inclusions.length > 3 && (
+                            <p className="text-xs text-muted-foreground">
+                              + {pkg.inclusions.length - 3} more inclusions
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex gap-2 pt-3">
+                      <Link
+                        href={`/events/packages/${pkg.slug}`}
+                        className="flex-1"
+                        target="_blank"
+                      >
+                        <Button variant="outline" size="sm" className="w-full">
+                          <Eye className="size-4 mr-2" />
+                          View Public
+                        </Button>
+                      </Link>
+                      <Link
+                        href={`/manager/packages/${pkg.id}/edit`}
+                        className="flex-1"
+                      >
+                        <Button size="sm" className="w-full">
+                          <Edit className="size-4 mr-2" />
+                          Edit
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      )}
+
+      {/* Inactive Packages */}
+      {inactivePackages.length > 0 && (
+        <details className="space-y-4">
+          <summary className="cursor-pointer text-lg font-bold hover:text-amber-600">
+            Inactive Packages ({inactivePackages.length})
+          </summary>
+
+          <div className="grid gap-6 lg:grid-cols-2 xl:gap-8 mt-4">
+            {inactivePackages.map((pkg) => (
+              <div
+                key={pkg.id}
+                className="p-6 rounded-xl border-2 bg-card shadow-md opacity-60 hover:opacity-100 hover:shadow-lg transition-all duration-300"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-bold">{pkg.name}</h3>
+                      <p className="text-sm text-muted-foreground capitalize">
+                        {pkg.event_type.replace("_", " ")}
+                      </p>
+                    </div>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-900/30 text-gray-600">
+                      Inactive
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2 pt-3 border-t">
+                    <Link
+                      href={`/manager/packages/${pkg.id}/edit`}
+                      className="flex-1"
+                    >
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Edit className="size-4 mr-2" />
+                        Edit
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
     </div>
   )
 }
