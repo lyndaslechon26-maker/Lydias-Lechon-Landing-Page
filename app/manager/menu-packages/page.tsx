@@ -110,7 +110,7 @@ export default async function ManagerMenuPackagesPage() {
               label={category.charAt(0).toUpperCase() + category.slice(1)}
               value={count.toString()}
               icon={Icon}
-              accent={category === 'buffet' ? 'orange' : category === 'plated' ? 'purple' : category === 'drinks' ? 'blue' : 'rose'}
+              accent={category === 'buffet' ? 'amber' : category === 'plated' ? 'purple' : category === 'drinks' ? 'blue' : 'rose'}
               subtitle={`${category} packages`}
             />
           )
