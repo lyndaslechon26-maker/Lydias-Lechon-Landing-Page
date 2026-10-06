@@ -62,7 +62,7 @@ export async function deleteCategory(id: string) {
 
   // Check if category has items
   const { count } = await supabase
-    .from("signature_dishes")
+    .from("menu_items")
     .select("*", { count: "exact", head: true })
     .eq("category_id", id)
 
@@ -120,7 +120,7 @@ export async function createMenuItem(formData: FormData) {
   }
 
   const { error } = await supabase
-    .from("signature_dishes")
+    .from("menu_items")
     .insert({
       name,
       description,
@@ -173,7 +173,7 @@ export async function updateMenuItem(id: string, formData: FormData) {
   }
 
   const { error } = await supabase
-    .from("signature_dishes")
+    .from("menu_items")
     .update({
       name,
       description,
@@ -198,7 +198,7 @@ export async function deleteMenuItem(id: string) {
   const supabase = await createClient()
 
   const { error } = await supabase
-    .from("signature_dishes")
+    .from("menu_items")
     .delete()
     .eq("id", id)
 
@@ -215,7 +215,7 @@ export async function toggleMenuItemAvailability(id: string, is_available: boole
   const supabase = await createClient()
 
   const { error } = await supabase
-    .from("signature_dishes")
+    .from("menu_items")
     .update({ is_available })
     .eq("id", id)
 

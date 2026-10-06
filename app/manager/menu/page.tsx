@@ -19,7 +19,7 @@ export default async function ManagerMenuPage() {
 
   // Fetch menu items with categories
   const { data: items } = await supabase
-    .from("signature_dishes")
+    .from("menu_items")
     .select(`
       *,
       category:food_categories(*)
