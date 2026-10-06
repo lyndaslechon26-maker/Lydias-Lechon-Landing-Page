@@ -924,7 +924,7 @@ function CategoryFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>{category ? "Edit Category" : "New Category"}</DialogTitle>
           <DialogDescription>
@@ -949,7 +949,7 @@ function CategoryFormDialog({
             <Textarea
               id="cat-desc"
               name="description"
-              rows={2}
+              rows={3}
               defaultValue={category?.description ?? ""}
               placeholder="Optional"
             />
