@@ -48,12 +48,13 @@ export default async function ManagerPackagesPage() {
 
   type EventPackage = typeof activePackages[number]
 
-  // Group by event type
+  // Group by event type (fallback to 'general' if event_type doesn't exist)
   const packagesByType = activePackages.reduce((acc, pkg) => {
-    if (!acc[pkg.event_type]) {
-      acc[pkg.event_type] = []
+    const eventType = pkg.event_type || 'general'
+    if (!acc[eventType]) {
+      acc[eventType] = []
     }
-    acc[pkg.event_type].push(pkg)
+    acc[eventType].push(pkg)
     return acc
   }, {} as Record<string, EventPackage[]>)
 
@@ -293,7 +294,7 @@ export default async function ManagerPackagesPage() {
                     <div>
                       <h3 className="text-lg font-bold">{pkg.name}</h3>
                       <p className="text-sm text-muted-foreground capitalize">
-                        {pkg.event_type.replace("_", " ")}
+                        {pkg.event_type ? pkg.event_type.replace("_", " ") : 'General Package'}
                       </p>
                     </div>
                     <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-900/30 text-gray-600">
