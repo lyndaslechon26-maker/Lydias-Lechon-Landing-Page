@@ -143,13 +143,13 @@ export default async function OrdersPage({
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Order Type Distribution */}
         <Card className="transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <div>
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Truck className="size-5 text-blue-600" />
                 Order Type Distribution
               </CardTitle>
-              <CardDescription>Delivery vs Pickup breakdown</CardDescription>
+              <CardDescription className="mt-1">Delivery vs Pickup breakdown</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
@@ -185,13 +185,13 @@ export default async function OrdersPage({
 
         {/* Status Distribution */}
         <Card className="transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <div>
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <BarChart3 className="size-5 text-blue-600" />
                 Order Status Distribution
               </CardTitle>
-              <CardDescription>Overview of all order statuses</CardDescription>
+              <CardDescription className="mt-1">Overview of all order statuses</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
@@ -225,7 +225,7 @@ export default async function OrdersPage({
 
       {/* Filters */}
       <Card className="transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset]">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex items-center gap-2">
             <Filter className="size-5 text-blue-600" />
             <CardTitle className="text-base font-semibold">Filters</CardTitle>
@@ -241,7 +241,7 @@ export default async function OrdersPage({
 
       {/* Orders Table */}
       <Card className="transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset]">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div>
             <CardTitle className="text-base font-semibold">All Orders</CardTitle>
             <CardDescription className="mt-1">
