@@ -44,6 +44,8 @@ export default function EditMenuPackagePage() {
   const [deleting, setDeleting] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasChanges, setHasChanges] = useState(false)
+  const [originalData, setOriginalData] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [menuPackage, setMenuPackage] = useState({
@@ -73,6 +75,17 @@ export default function EditMenuPackagePage() {
     loadMenuPackage()
   }, [menuPackageId])
 
+  // Track changes
+  useEffect(() => {
+    if (!originalData) return
+    const hasChanged = JSON.stringify(menuPackage) !== JSON.stringify(originalData)
+    setHasChanges(hasChanged)
+  }, [menuPackage, originalData])
+
+  const updateField = (field: string, value: any) => {
+    setMenuPackage({ ...menuPackage, [field]: value })
+  }
+
   const loadMenuPackage = async () => {
     setLoading(true)
     const { menuPackage: data, error } = await getMenuPackageById(menuPackageId)
@@ -83,7 +96,7 @@ export default function EditMenuPackagePage() {
       return
     }
 
-    setMenuPackage({
+    const packageData = {
       name: data.name || "",
       category: data.category || "buffet",
       description: data.description || "",
@@ -98,7 +111,11 @@ export default function EditMenuPackagePage() {
       },
       photo: data.photo || "",
       is_active: data.is_active ?? true,
-    })
+    }
+
+    setMenuPackage(packageData)
+    setOriginalData(JSON.parse(JSON.stringify(packageData))) // Deep clone for comparison
+    setHasChanges(false)
     setLoading(false)
   }
 
@@ -519,7 +536,7 @@ export default function EditMenuPackagePage() {
             </Button>
             <Button
               onClick={handleSave}
-              disabled={saving || deleting || !menuPackage.name || !menuPackage.category || menuPackage.items.length === 0}
+              disabled={saving || deleting || !menuPackage.name || !menuPackage.category || menuPackage.items.length === 0 || !hasChanges}
               className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
             >
               {saving ? (

@@ -1,5 +1,7 @@
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+"use client"
+
+import { useEffect, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import {
   UtensilsCrossed,
@@ -17,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/page-header"
 import { StatCard } from "@/components/stat-card"
+import { EditMenuPackageDialog } from "@/components/manager/edit-menu-package-dialog"
 
 export const dynamic = "force-dynamic"
 
@@ -34,23 +37,55 @@ const categoryColors = {
   dessert: "bg-pink-100 dark:bg-pink-900/30 text-pink-600",
 }
 
-export default async function ManagerMenuPackagesPage() {
-  const supabase = await createClient()
-  
-  // Check authentication
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect("/events/login?next=/manager/menu-packages")
+export default function ManagerMenuPackagesPage() {
+  const [menuPackages, setMenuPackages] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [editingPackageId, setEditingPackageId] = useState<string | null>(null)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
 
-  // Fetch menu packages
-  const { data: menuPackages, error } = await supabase
-    .from("event_menu_packages")
-    .select("*")
-    .order("sort_order")
+  useEffect(() => {
+    loadPackages()
+  }, [])
+
+  const loadPackages = async () => {
+    setLoading(true)
+    const supabase = createClient()
+    
+    const { data, error } = await supabase
+      .from("event_menu_packages")
+      .select("*")
+      .order("sort_order")
+
+    if (error) {
+      setError(error.message)
+    } else {
+      setMenuPackages(data || [])
+    }
+    setLoading(false)
+  }
+
+  const handleEdit = (packageId: string) => {
+    setEditingPackageId(packageId)
+    setEditDialogOpen(true)
+  }
+
+  const handleEditSuccess = () => {
+    loadPackages()
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
 
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-destructive">{error.message}</p>
+        <p className="text-destructive">{error}</p>
       </div>
     )
   }
@@ -69,6 +104,13 @@ export default async function ManagerMenuPackagesPage() {
 
   return (
     <div className="space-y-6 bg-white dark:bg-zinc-950">
+      <EditMenuPackageDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        packageId={editingPackageId}
+        onSuccess={handleEditSuccess}
+      />
+      
       <PageHeader
         title="Menu Package Management"
         description="Manage your event catering and menu options"
@@ -227,15 +269,14 @@ export default async function ManagerMenuPackagesPage() {
 
                     {/* Actions */}
                     <div className="flex gap-2 pt-3 border-t">
-                      <Link
-                        href={`/manager/menu-packages/${pkg.id}/edit`}
-                        className="flex-1"
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        onClick={() => handleEdit(pkg.id)}
                       >
-                        <Button size="sm" className="w-full">
-                          <Edit className="size-4 mr-2" />
-                          Edit
-                        </Button>
-                      </Link>
+                        <Edit className="size-4 mr-2" />
+                        Edit
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -269,15 +310,15 @@ export default async function ManagerMenuPackagesPage() {
                 </div>
 
                 <div className="flex gap-2 pt-3 border-t">
-                  <Link
-                    href={`/manager/menu-packages/${pkg.id}/edit`}
-                    className="flex-1"
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleEdit(pkg.id)}
                   >
-                    <Button variant="outline" size="sm" className="w-full">
-                      <Edit className="size-4 mr-2" />
-                      Edit
-                    </Button>
-                  </Link>
+                    <Edit className="size-4 mr-2" />
+                    Edit
+                  </Button>
                 </div>
               </div>
             ))}
