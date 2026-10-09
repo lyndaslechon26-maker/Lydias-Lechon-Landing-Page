@@ -73,7 +73,7 @@ export default async function GalleryPage() {
       </div>
 
       <Card className="transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset]">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-6 pb-4">
           <div>
             <CardTitle className="text-base font-semibold">All Images</CardTitle>
             <CardDescription className="mt-1">{totalImages} {totalImages === 1 ? 'image' : 'images'} total</CardDescription>
@@ -86,7 +86,7 @@ export default async function GalleryPage() {
             Live
           </Badge>
         </CardHeader>
-        <CardContent className="pt-6">
+        <CardContent className="px-6 pt-6 pb-6">
           {error ? (
             <EmptyState 
               icon={<ImageIcon className="size-8" />} 

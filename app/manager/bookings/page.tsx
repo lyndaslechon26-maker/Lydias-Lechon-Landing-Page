@@ -125,7 +125,7 @@ export default async function BookingsPage({
 
       {/* Status Breakdown */}
       <Card className="transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_1px_0_rgba(255,255,255,0.1)_inset] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.2)_inset]">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-6 pb-4">
           <div>
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <Users className="size-5 text-purple-600" />
@@ -134,7 +134,7 @@ export default async function BookingsPage({
             <CardDescription className="mt-1">Overview of all booking statuses</CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="pt-6">
+        <CardContent className="px-6 pt-6 pb-6">
           <div className="space-y-4">
             {statusBreakdown.map((status) => (
               <div key={status.label} className="space-y-2">
@@ -164,7 +164,7 @@ export default async function BookingsPage({
 
       {/* Filters */}
       <Card className="transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset]">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-6 pb-4">
           <div className="flex items-center gap-2">
             <Filter className="size-5 text-purple-600" />
             <CardTitle className="text-base font-semibold">Filters</CardTitle>
@@ -173,14 +173,14 @@ export default async function BookingsPage({
             Reset All
           </Button>
         </CardHeader>
-        <CardContent className="pt-6">
+        <CardContent className="px-6 pt-6 pb-6">
           <BookingFilters />
         </CardContent>
       </Card>
 
       {/* Bookings Table */}
       <Card className="transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset]">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-6 pb-4">
           <div>
             <CardTitle className="text-base font-semibold">All Bookings</CardTitle>
             <CardDescription className="mt-1">
@@ -195,7 +195,7 @@ export default async function BookingsPage({
             Live Updates
           </Badge>
         </CardHeader>
-        <CardContent className="pt-6">
+        <CardContent className="px-6 pt-6 pb-6">
           {bookings.length > 0 ? (
             <BookingsTable bookings={bookings} />
           ) : (

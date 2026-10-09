@@ -153,7 +153,7 @@ export default async function ManagerDashboard() {
 
       {/* Operations strip */}
       <Card className="transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_1px_0_rgba(255,255,255,0.1)_inset] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.2)_inset]">
-        <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
+        <CardContent className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
           <div className="flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-2">
               <span className="relative flex size-2.5">
@@ -182,7 +182,7 @@ export default async function ManagerDashboard() {
       {/* Alerts */}
       {(pendingOrders || 0) > 5 && (
         <Card className="border-amber-500/40 bg-amber-50/50 dark:bg-amber-950/20 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(245,158,11,0.3),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(245,158,11,0.15),0_0_0_1px_rgba(245,158,11,0.1)_inset,0_1px_0_rgba(255,255,255,0.5)_inset]">
-          <CardContent className="flex items-start gap-3 p-4">
+          <CardContent className="flex items-start gap-3 px-6 py-4">
             <AlertCircle className="mt-0.5 size-5 shrink-0 text-amber-600" />
             <div className="flex-1">
               <p className="text-sm font-medium">Operations Alert</p>
@@ -201,7 +201,7 @@ export default async function ManagerDashboard() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Recent Orders — spans 2 cols */}
         <Card className="lg:col-span-2 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_1px_0_rgba(255,255,255,0.1)_inset] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.2)_inset]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-6 pb-4">
             <div>
               <CardTitle className="text-base font-semibold">Recent Orders</CardTitle>
               <CardDescription className="mt-1">Latest customer orders</CardDescription>
@@ -213,7 +213,7 @@ export default async function ManagerDashboard() {
               </Link>
             </Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-6 pt-6 pb-6">
             {recentOrders && recentOrders.length > 0 ? (
               <div className="space-y-2">
                 {recentOrders.map((order) => (
@@ -252,7 +252,7 @@ export default async function ManagerDashboard() {
 
         {/* Recent Bookings */}
         <Card className="transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.3)_inset] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)_inset,0_1px_0_rgba(255,255,255,0.5)_inset] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_1px_0_rgba(255,255,255,0.1)_inset] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.1)_inset,0_1px_0_rgba(255,255,255,0.2)_inset]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-6 pt-6 pb-4">
             <div>
               <CardTitle className="text-base font-semibold">Event Bookings</CardTitle>
               <CardDescription className="mt-1">Upcoming events</CardDescription>
@@ -264,7 +264,7 @@ export default async function ManagerDashboard() {
               </Link>
             </Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-6 pt-6 pb-6">
             {recentBookings && recentBookings.length > 0 ? (
               <ul className="space-y-3">
                 {recentBookings.map((booking) => (
