@@ -32,11 +32,20 @@ import {
 import { updateMenuPackage, getMenuPackageById, deleteMenuPackage } from "@/app/actions/manager-menu-packages"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { createClient } from "@/lib/supabase/client"
 
 interface MenuItem {
   name: string
   description: string
   is_signature: boolean
+}
+
+interface MenuItemFromDB {
+  id: string
+  name: string
+  description: string
+  category: string
+  price: number
 }
 
 interface EditMenuPackageDialogProps {
@@ -52,6 +61,8 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
   const [deleting, setDeleting] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [availableMenuItems, setAvailableMenuItems] = useState<MenuItemFromDB[]>([])
+  const [selectedMenuItemId, setSelectedMenuItemId] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [menuPackage, setMenuPackage] = useState({
@@ -80,8 +91,22 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
   useEffect(() => {
     if (open && packageId) {
       loadMenuPackage()
+      loadAvailableMenuItems()
     }
   }, [open, packageId])
+
+  const loadAvailableMenuItems = async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from("menu_items")
+      .select("id, name, description, category, price")
+      .eq("is_active", true)
+      .order("name")
+
+    if (!error && data) {
+      setAvailableMenuItems(data)
+    }
+  }
 
   const loadMenuPackage = async () => {
     if (!packageId) return
@@ -165,15 +190,33 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
   }
 
   const addItem = () => {
-    if (newItem.name.trim()) {
-      setMenuPackage({
-        ...menuPackage,
-        items: [...menuPackage.items, newItem]
-      })
-      setNewItem({ name: "", description: "", is_signature: false })
-    } else {
-      setError("Please enter a menu item name")
+    if (!selectedMenuItemId) {
+      setError("Please select a menu item")
+      return
     }
+
+    const selectedItem = availableMenuItems.find(item => item.id === selectedMenuItemId)
+    if (!selectedItem) return
+
+    // Check if item already exists
+    if (menuPackage.items.some(item => item.name === selectedItem.name)) {
+      setError("This menu item is already added")
+      return
+    }
+
+    const newMenuItem: MenuItem = {
+      name: selectedItem.name,
+      description: selectedItem.description || "",
+      is_signature: newItem.is_signature
+    }
+
+    setMenuPackage({
+      ...menuPackage,
+      items: [...menuPackage.items, newMenuItem]
+    })
+    setSelectedMenuItemId("")
+    setNewItem({ name: "", description: "", is_signature: false })
+    setError(null)
   }
 
   const removeItem = (index: number) => {
@@ -316,32 +359,47 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
                 
                 {/* Add Item Form */}
                 <div className="space-y-3 p-4 rounded-lg bg-muted/30">
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <Input
-                      value={newItem.name}
-                      onChange={(e) => setNewItem({...newItem, name: e.target.value})}
-                      placeholder="Item name (e.g., Grilled Chicken)"
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem())}
-                    />
-                    <Input
-                      value={newItem.description}
-                      onChange={(e) => setNewItem({...newItem, description: e.target.value})}
-                      placeholder="Description (optional)"
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem())}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        checked={newItem.is_signature}
-                        onCheckedChange={(checked) => setNewItem({...newItem, is_signature: checked as boolean})}
-                      />
-                      <label className="text-sm">Signature dish</label>
+                  <p className="text-sm text-muted-foreground">Select menu items from your menu:</p>
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <Select
+                        value={selectedMenuItemId}
+                        onValueChange={setSelectedMenuItemId}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a menu item..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableMenuItems.length === 0 ? (
+                            <div className="p-2 text-sm text-muted-foreground text-center">
+                              No menu items available
+                            </div>
+                          ) : (
+                            availableMenuItems.map((item) => (
+                              <SelectItem key={item.id} value={item.id}>
+                                <div className="flex items-center justify-between gap-2">
+                                  <span>{item.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    ({item.category})
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <Button onClick={addItem} type="button" size="sm">
+                    <Button onClick={addItem} type="button" size="sm" disabled={!selectedMenuItemId}>
                       <Plus className="size-4 mr-2" />
                       Add
                     </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={newItem.is_signature}
+                      onCheckedChange={(checked) => setNewItem({...newItem, is_signature: checked as boolean})}
+                    />
+                    <label className="text-sm">Mark as signature dish</label>
                   </div>
                 </div>
 
