@@ -603,14 +603,11 @@ function ItemCard({
           )}
           <Separator className="my-2" />
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Switch
-                checked={item.is_available}
-                onCheckedChange={onToggle}
-                disabled={pending}
-              />
-              <span>{item.is_available ? "Available" : "Off"}</span>
-            </div>
+            <Switch
+              checked={item.is_available}
+              onCheckedChange={onToggle}
+              disabled={pending}
+            />
             <DropdownMenu>
               <DropdownMenuTrigger className="size-6 inline-flex items-center justify-center rounded-md bg-transparent hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                 <MoreVertical className="size-3.5" />
