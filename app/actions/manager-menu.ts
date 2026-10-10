@@ -93,7 +93,7 @@ export async function createMenuItem(formData: FormData) {
   
   const name = formData.get("name") as string
   const description = formData.get("description") as string | null
-  const price = parseFloat(formData.get("price") as string)
+  const base_price = parseFloat(formData.get("base_price") as string)
   const category_id = formData.get("category_id") as string | null
   const is_available = formData.get("is_available") === "on"
   const is_alcoholic = formData.get("is_alcoholic") === "on"
@@ -124,7 +124,7 @@ export async function createMenuItem(formData: FormData) {
     .insert({
       name,
       description,
-      price,
+      base_price,
       category_id: category_id === "none" ? null : category_id,
       is_available,
       is_alcoholic,
@@ -145,7 +145,7 @@ export async function updateMenuItem(id: string, formData: FormData) {
   
   const name = formData.get("name") as string
   const description = formData.get("description") as string | null
-  const price = parseFloat(formData.get("price") as string)
+  const base_price = parseFloat(formData.get("base_price") as string)
   const category_id = formData.get("category_id") as string | null
   const is_available = formData.get("is_available") === "on"
   const is_alcoholic = formData.get("is_alcoholic") === "on"
@@ -177,7 +177,7 @@ export async function updateMenuItem(id: string, formData: FormData) {
     .update({
       name,
       description,
-      price,
+      base_price,
       category_id: category_id === "none" ? null : category_id,
       is_available,
       is_alcoholic,

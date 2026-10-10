@@ -69,7 +69,7 @@ type MenuItem = {
   id: string
   name: string
   description: string | null
-  price: number
+  base_price: number
   image_url: string | null
   category_id: string | null
   is_available: boolean
@@ -590,7 +590,7 @@ function ItemCard({
           <div className="flex items-start justify-between gap-2">
             <h3 className="line-clamp-1 text-sm font-semibold">{item.name}</h3>
             <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
-              ₱{Number(item.price || 0).toLocaleString()}
+              ₱{Number(item.base_price || 0).toLocaleString()}
             </span>
           </div>
           {item.category && (
@@ -769,15 +769,15 @@ function ItemFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="price">Price (₱) *</Label>
+              <Label htmlFor="base_price">Price (₱) *</Label>
               <Input
-                id="price"
-                name="price"
+                id="base_price"
+                name="base_price"
                 type="number"
                 step="0.01"
                 min="0"
                 required
-                defaultValue={item?.price ?? ""}
+                defaultValue={item?.base_price ?? ""}
                 placeholder="0.00"
               />
             </div>
