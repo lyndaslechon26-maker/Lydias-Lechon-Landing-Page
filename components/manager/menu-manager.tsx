@@ -93,6 +93,18 @@ export function MenuManager({
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [availabilityFilter, setAvailabilityFilter] = useState<"all" | "available" | "unavailable">("all")
 
+  // Debug: Log the props when component mounts
+  useEffect(() => {
+    console.log('MenuManager received:', {
+      categoriesCount: categories.length,
+      itemsCount: items.length,
+      sampleCategory: categories[0],
+      sampleItem: items[0],
+      itemsWithCategories: items.filter(i => i.category_id).length,
+      itemsWithoutCategories: items.filter(i => !i.category_id).length,
+    })
+  }, [categories, items])
+
   // dialogs
   const [itemDialog, setItemDialog] = useState<{ open: boolean; item: MenuItem | null }>({ open: false, item: null })
   const [categoryDialog, setCategoryDialog] = useState<{ open: boolean; category: Category | null }>({ open: false, category: null })
@@ -100,7 +112,7 @@ export function MenuManager({
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null)
 
   const filteredItems = useMemo(() => {
-    return items.filter((i) => {
+    const filtered = items.filter((i) => {
       if (categoryFilter !== "all" && i.category_id !== categoryFilter) return false
       if (availabilityFilter === "available" && !i.is_available) return false
       if (availabilityFilter === "unavailable" && i.is_available) return false
@@ -111,6 +123,18 @@ export function MenuManager({
         (i.description ?? "").toLowerCase().includes(q)
       )
     })
+    
+    console.log('Filtered items:', {
+      total: items.length,
+      filtered: filtered.length,
+      categoryFilter,
+      availabilityFilter,
+      search,
+      availableItems: items.filter(i => i.is_available).length,
+      unavailableItems: items.filter(i => !i.is_available).length,
+    })
+    
+    return filtered
   }, [items, search, categoryFilter, availabilityFilter])
 
   const itemsByCategory = useMemo(() => {
