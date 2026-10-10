@@ -152,6 +152,17 @@ export async function updateMenuItem(id: string, formData: FormData) {
   const imageFile = formData.get("image_file") as File | null
   const existingImageUrl = formData.get("image_url") as string
 
+  console.log("Update menu item - Form data:", {
+    name,
+    description,
+    base_price,
+    category_id,
+    is_available,
+    is_alcoholic,
+    existingImageUrl,
+    hasImageFile: !!imageFile && imageFile.size > 0,
+  })
+
   let image_url: string | null = existingImageUrl || null
 
   // Handle image upload
@@ -187,7 +198,13 @@ export async function updateMenuItem(id: string, formData: FormData) {
 
   if (error) {
     console.error("Failed to update menu item:", error)
-    return { error: "Failed to update menu item" }
+    console.error("Error details:", {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    })
+    return { error: `Failed to update menu item: ${error.message}` }
   }
 
   revalidatePath("/manager/menu")
