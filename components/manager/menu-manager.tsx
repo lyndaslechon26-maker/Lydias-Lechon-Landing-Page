@@ -442,11 +442,9 @@ export function MenuManager({
                           <div className="text-emerald-600 dark:text-emerald-400">{available} available</div>
                         </div>
                         <DropdownMenu>
-                          <DropdownMenuTrigger>
-                            <Button size="icon" variant="ghost" className="size-8">
-                              <MoreVertical className="size-4" />
-                              <span className="sr-only">Menu</span>
-                            </Button>
+                          <DropdownMenuTrigger className="size-8 inline-flex items-center justify-center rounded-md bg-transparent hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                            <MoreVertical className="size-4" />
+                            <span className="sr-only">Menu</span>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => setCategoryDialog({ open: true, category: cat })}>
@@ -610,11 +608,9 @@ function ItemCard({
               <span>{item.is_available ? "Available" : "Off"}</span>
             </div>
             <DropdownMenu>
-              <DropdownMenuTrigger>
-                <Button size="icon" variant="ghost" className="size-6">
-                  <MoreVertical className="size-3.5" />
-                  <span className="sr-only">Menu</span>
-                </Button>
+              <DropdownMenuTrigger className="size-6 inline-flex items-center justify-center rounded-md bg-transparent hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                <MoreVertical className="size-3.5" />
+                <span className="sr-only">Menu</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={onEdit}>

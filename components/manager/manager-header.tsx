@@ -79,18 +79,16 @@ export function ManagerHeader({ userName }: { userName?: string | null }) {
 
           {/* User Menu */}
           <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Button variant="ghost" className="gap-3 hover:bg-slate-100 px-2">
-                <Avatar className="size-9 ring-2 ring-amber-500/20">
-                  <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white font-semibold">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="hidden md:block text-left">
-                  <p className="text-sm font-semibold">{userName || 'Manager'}</p>
-                  <p className="text-xs text-muted-foreground">Landing Page Manager</p>
-                </div>
-              </Button>
+            <DropdownMenuTrigger className="gap-3 hover:bg-slate-100 px-2 bg-transparent border-none rounded-md inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
+              <Avatar className="size-9 ring-2 ring-amber-500/20">
+                <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white font-semibold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="hidden md:block text-left">
+                <p className="text-sm font-semibold">{userName || 'Manager'}</p>
+                <p className="text-xs text-muted-foreground">Landing Page Manager</p>
+              </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
