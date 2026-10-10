@@ -125,12 +125,14 @@ export default function ManagerMenuPackagesPage() {
               <Download className="mr-2 size-4" />
               Export
             </Button>
-            <Link href="/manager/menu-packages/new">
-              <Button size="sm" className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700">
-                <Plus className="size-4 mr-2" />
-                Add Menu Package
-              </Button>
-            </Link>
+            <Button 
+              size="sm" 
+              className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+              onClick={() => alert('Create new menu package modal - Coming soon!')}
+            >
+              <Plus className="size-4 mr-2" />
+              Add Menu Package
+            </Button>
           </>
         }
       />
@@ -169,12 +171,13 @@ export default function ManagerMenuPackagesPage() {
           <p className="text-muted-foreground mb-6">
             Create your first menu package to offer catering options
           </p>
-          <Link href="/manager/menu-packages/new">
-            <Button className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700">
-              <Plus className="size-4 mr-2" />
-              Add Your First Menu Package
-            </Button>
-          </Link>
+          <Button 
+            className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+            onClick={() => alert('Create new menu package modal - Coming soon!')}
+          >
+            <Plus className="size-4 mr-2" />
+            Add Your First Menu Package
+          </Button>
         </div>
       ) : (
         (Object.entries(byCategory) as [string, MenuPackage[]][]).map(([category, packages]) => {
