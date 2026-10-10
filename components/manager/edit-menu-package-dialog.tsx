@@ -71,7 +71,7 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
     category: "buffet",
     description: "",
     price_per_person: 500,
-    min_order: 50,
+    min_guests: 50,
     items: [] as MenuItem[],
     dietary_info: {
       vegetarian: false,
@@ -126,7 +126,7 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
       category: data.category || "buffet",
       description: data.description || "",
       price_per_person: Number(data.price_per_person) || 500,
-      min_order: data.min_order || 50,
+      min_guests: data.min_order || 50,
       items: data.items || [],
       dietary_info: data.dietary_info || {
         vegetarian: false,
@@ -156,7 +156,18 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
     setSaving(true)
     setError(null)
     
-    const result = await updateMenuPackage(packageId, menuPackage)
+    // Transform items to string array for the action
+    const itemsArray = menuPackage.items.map(item => item.name)
+    
+    const result = await updateMenuPackage(packageId, {
+      name: menuPackage.name,
+      category: menuPackage.category,
+      description: menuPackage.description,
+      price_per_person: menuPackage.price_per_person,
+      min_guests: menuPackage.min_guests,
+      items: itemsArray,
+      is_active: menuPackage.is_active,
+    })
     
     if (result?.error) {
       setError(result.error)
@@ -371,8 +382,8 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
                     <label className="block text-sm font-medium mb-2">Minimum Order (pax) *</label>
                     <Input
                       type="number"
-                      value={menuPackage.min_order}
-                      onChange={(e) => setMenuPackage({...menuPackage, min_order: Number(e.target.value)})}
+                      value={menuPackage.min_guests}
+                      onChange={(e) => setMenuPackage({...menuPackage, min_guests: Number(e.target.value)})}
                       min="1"
                     />
                   </div>
@@ -390,7 +401,7 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
                     <div className="flex-1">
                       <Select
                         value={selectedMenuItemId}
-                        onValueChange={setSelectedMenuItemId}
+                        onValueChange={(value) => setSelectedMenuItemId(value || "")}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select a menu item..." />
