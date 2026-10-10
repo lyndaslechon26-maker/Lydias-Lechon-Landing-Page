@@ -33,6 +33,7 @@ import { updateMenuPackage, getMenuPackageById, deleteMenuPackage } from "@/app/
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { createClient } from "@/lib/supabase/client"
+import { compressImageToBase64, formatFileSize, COMPRESSION_PRESETS } from "@/lib/image-compression"
 
 interface MenuItem {
   name: string
@@ -230,22 +231,47 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
     const files = e.target.files
     if (!files || files.length === 0) return
 
-    setUploadingPhoto(true)
     const file = files[0]
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError("Please select a valid image file")
+      return
+    }
+
+    // Validate file size (max 10MB before compression)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      setError("Image size must be less than 10MB")
+      return
+    }
+
+    setUploadingPhoto(true)
+    setError(null)
 
     try {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setMenuPackage({...menuPackage, photo: reader.result as string})
-        setUploadingPhoto(false)
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ''
-        }
-      }
-      reader.readAsDataURL(file)
-    } catch (error) {
-      setError("Failed to upload photo")
+      const originalSize = file.size
+      
+      // Compress image using product preset
+      const compressedBase64 = await compressImageToBase64(file, COMPRESSION_PRESETS.product)
+      
+      // Calculate compressed size (rough estimate from base64 length)
+      const compressedSize = Math.round((compressedBase64.length * 3) / 4)
+      
+      // Show compression info in console
+      console.log(`Image compressed: ${formatFileSize(originalSize)} → ${formatFileSize(compressedSize)} (${Math.round((compressedSize / originalSize) * 100)}% of original)`)
+      
+      setMenuPackage({...menuPackage, photo: compressedBase64})
       setUploadingPhoto(false)
+      
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    } catch (error) {
+      console.error('Compression error:', error)
+      setError("Failed to compress and upload photo")
+      setUploadingPhoto(false)
+      
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }

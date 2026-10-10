@@ -1,121 +1,81 @@
 /**
  * Image Compression Utility
- * Compresses images client-side before upload to save storage space
- * while maintaining good visual quality
+ * Compresses images to reduce storage size in Supabase
  */
 
 export interface CompressionOptions {
   maxWidth?: number
   maxHeight?: number
-  quality?: number // 0.0 to 1.0
-  outputFormat?: 'image/jpeg' | 'image/webp' | 'image/png'
+  quality?: number
+  format?: 'image/jpeg' | 'image/webp' | 'image/png'
 }
 
 const DEFAULT_OPTIONS: CompressionOptions = {
-  maxWidth: 1200,
-  maxHeight: 1200,
-  quality: 0.85, // 85% quality - good balance between size and quality
-  outputFormat: 'image/webp', // WebP for best compression
+  maxWidth: 1920,
+  maxHeight: 1080,
+  quality: 0.85,
+  format: 'image/jpeg'
 }
 
 /**
- * Compress an image file
+ * Compress an image file to reduce size
  * @param file - The image file to compress
  * @param options - Compression options
- * @returns Promise<File> - Compressed image file
+ * @returns Promise<Blob> - Compressed image blob
  */
 export async function compressImage(
   file: File,
   options: CompressionOptions = {}
-): Promise<File> {
+): Promise<Blob> {
   const opts = { ...DEFAULT_OPTIONS, ...options }
-
-  // Return original if not an image
-  if (!file.type.startsWith('image/')) {
-    return file
-  }
 
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
 
     reader.onload = (e) => {
       const img = new Image()
-
+      
       img.onload = () => {
-        try {
-          // Calculate new dimensions while maintaining aspect ratio
-          let { width, height } = img
-          const maxWidth = opts.maxWidth!
-          const maxHeight = opts.maxHeight!
+        // Calculate new dimensions while maintaining aspect ratio
+        let { width, height } = img
+        const maxWidth = opts.maxWidth!
+        const maxHeight = opts.maxHeight!
 
-          if (width > maxWidth || height > maxHeight) {
-            const aspectRatio = width / height
-
-            if (width > height) {
-              width = maxWidth
-              height = width / aspectRatio
-            } else {
-              height = maxHeight
-              width = height * aspectRatio
-            }
-          }
-
-          // Create canvas and draw resized image
-          const canvas = document.createElement('canvas')
-          canvas.width = width
-          canvas.height = height
-
-          const ctx = canvas.getContext('2d')
-          if (!ctx) {
-            reject(new Error('Could not get canvas context'))
-            return
-          }
-
-          // Use better image smoothing
-          ctx.imageSmoothingEnabled = true
-          ctx.imageSmoothingQuality = 'high'
-
-          // Draw image
-          ctx.drawImage(img, 0, 0, width, height)
-
-          // Convert to blob
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) {
-                reject(new Error('Failed to compress image'))
-                return
-              }
-
-              // Create new file from blob
-              const compressedFile = new File(
-                [blob],
-                file.name.replace(/\.[^.]+$/, getExtension(opts.outputFormat!)),
-                {
-                  type: opts.outputFormat,
-                  lastModified: Date.now(),
-                }
-              )
-
-              // Log compression results
-              const originalSize = (file.size / 1024).toFixed(2)
-              const compressedSize = (compressedFile.size / 1024).toFixed(2)
-              const savings = (
-                ((file.size - compressedFile.size) / file.size) *
-                100
-              ).toFixed(1)
-
-              console.log(
-                `Image compressed: ${originalSize}KB → ${compressedSize}KB (${savings}% reduction)`
-              )
-
-              resolve(compressedFile)
-            },
-            opts.outputFormat,
-            opts.quality
-          )
-        } catch (error) {
-          reject(error)
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width
+          width = maxWidth
         }
+
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height
+          height = maxHeight
+        }
+
+        // Create canvas for compression
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('Failed to get canvas context'))
+          return
+        }
+
+        // Draw and compress image
+        ctx.drawImage(img, 0, 0, width, height)
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error('Failed to compress image'))
+              return
+            }
+            resolve(blob)
+          },
+          opts.format,
+          opts.quality
+        )
       }
 
       img.onerror = () => {
@@ -134,39 +94,96 @@ export async function compressImage(
 }
 
 /**
- * Get file extension for output format
+ * Convert compressed blob to base64 string for storage
+ * @param blob - Compressed image blob
+ * @returns Promise<string> - Base64 encoded image
  */
-function getExtension(format: string): string {
-  switch (format) {
-    case 'image/jpeg':
-      return '.jpg'
-    case 'image/webp':
-      return '.webp'
-    case 'image/png':
-      return '.png'
-    default:
-      return '.jpg'
+export async function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    
+    reader.onloadend = () => {
+      resolve(reader.result as string)
+    }
+    
+    reader.onerror = () => {
+      reject(new Error('Failed to convert blob to base64'))
+    }
+    
+    reader.readAsDataURL(blob)
+  })
+}
+
+/**
+ * Compress image and return as base64 string
+ * @param file - The image file to compress
+ * @param options - Compression options
+ * @returns Promise<string> - Base64 encoded compressed image
+ */
+export async function compressImageToBase64(
+  file: File,
+  options: CompressionOptions = {}
+): Promise<string> {
+  const compressedBlob = await compressImage(file, options)
+  return blobToBase64(compressedBlob)
+}
+
+/**
+ * Get human-readable file size
+ * @param bytes - Size in bytes
+ * @returns Formatted size string
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes'
+  
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i]
+}
+
+/**
+ * Compression presets for different use cases
+ */
+export const COMPRESSION_PRESETS = {
+  // For gallery images - high quality
+  gallery: {
+    maxWidth: 1920,
+    maxHeight: 1080,
+    quality: 0.9,
+    format: 'image/jpeg' as const
+  },
+  
+  // For product/menu images - balanced
+  product: {
+    maxWidth: 1200,
+    maxHeight: 900,
+    quality: 0.85,
+    format: 'image/jpeg' as const
+  },
+  
+  // For thumbnails - smaller size
+  thumbnail: {
+    maxWidth: 600,
+    maxHeight: 400,
+    quality: 0.8,
+    format: 'image/jpeg' as const
+  },
+  
+  // For profile pictures - square crop
+  avatar: {
+    maxWidth: 400,
+    maxHeight: 400,
+    quality: 0.85,
+    format: 'image/jpeg' as const
+  },
+  
+  // For logos/icons - PNG format preserved
+  logo: {
+    maxWidth: 800,
+    maxHeight: 800,
+    quality: 0.9,
+    format: 'image/png' as const
   }
-}
-
-/**
- * Compress multiple images
- */
-export async function compressImages(
-  files: File[],
-  options?: CompressionOptions
-): Promise<File[]> {
-  return Promise.all(files.map((file) => compressImage(file, options)))
-}
-
-/**
- * Get estimated compression savings
- */
-export function estimateCompressionSavings(
-  fileSize: number,
-  quality: number = 0.85
-): number {
-  // Rough estimate: WebP at 85% quality typically achieves 50-70% size reduction
-  const estimatedReduction = 0.6 // 60% average
-  return Math.round(fileSize * estimatedReduction)
 }
