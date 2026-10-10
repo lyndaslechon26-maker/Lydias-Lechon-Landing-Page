@@ -17,13 +17,10 @@ export default async function ManagerMenuPage() {
     .select("*")
     .order("sort_order", { ascending: true })
 
-  // Fetch menu items with categories
+  // Fetch menu items - simplified query without JOIN
   const { data: items, error: itemsError } = await supabase
     .from("menu_items")
-    .select(`
-      *,
-      category:food_categories(*)
-    `)
+    .select("*")
     .order("created_at", { ascending: false })
 
   console.log('Menu items fetch result:', { 

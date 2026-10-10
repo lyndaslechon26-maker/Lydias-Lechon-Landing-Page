@@ -588,7 +588,7 @@ function ItemCard({
           <div className="flex items-start justify-between gap-2">
             <h3 className="line-clamp-1 text-sm font-semibold">{item.name}</h3>
             <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
-              ₱{Number(item.price).toLocaleString()}
+              ₱{Number(item.price || 0).toLocaleString()}
             </span>
           </div>
           {item.category && (
