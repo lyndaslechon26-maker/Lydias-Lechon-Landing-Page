@@ -654,6 +654,8 @@ function ItemFormDialog({
   const [removeImage, setRemoveImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("none")
+  const [isAvailable, setIsAvailable] = useState(true)
+  const [isAlcoholic, setIsAlcoholic] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -662,8 +664,10 @@ function ItemFormDialog({
       setRemoveImage(false)
       setError(null)
       setSelectedCategoryId(item?.category_id ?? "none")
+      setIsAvailable(item?.is_available ?? true)
+      setIsAlcoholic(item?.is_alcoholic ?? false)
     }
-  }, [open, item?.id, item?.category_id])
+  }, [open, item?.id, item?.category_id, item?.is_available, item?.is_alcoholic])
 
   useEffect(() => {
     return () => {
@@ -868,9 +872,10 @@ function ItemFormDialog({
               <div className="flex items-center gap-2">
                 <Switch
                   id="is_available"
-                  name="is_available"
-                  defaultChecked={item?.is_available ?? true}
+                  checked={isAvailable}
+                  onCheckedChange={setIsAvailable}
                 />
+                <input type="hidden" name="is_available" value={isAvailable ? "on" : "off"} />
                 <Label htmlFor="is_available" className="cursor-pointer">
                   Available for ordering
                 </Label>
@@ -879,9 +884,10 @@ function ItemFormDialog({
               <div className="flex items-center gap-2">
                 <Switch
                   id="is_alcoholic"
-                  name="is_alcoholic"
-                  defaultChecked={item?.is_alcoholic ?? false}
+                  checked={isAlcoholic}
+                  onCheckedChange={setIsAlcoholic}
                 />
+                <input type="hidden" name="is_alcoholic" value={isAlcoholic ? "on" : "off"} />
                 <Label htmlFor="is_alcoholic" className="cursor-pointer">
                   Contains alcohol
                 </Label>
