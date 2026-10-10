@@ -63,7 +63,6 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [availableMenuItems, setAvailableMenuItems] = useState<MenuItemFromDB[]>([])
-  const [selectedMenuItemId, setSelectedMenuItemId] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [menuPackage, setMenuPackage] = useState({
@@ -83,12 +82,6 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
     is_active: true,
   })
 
-  const [newItem, setNewItem] = useState<MenuItem>({
-    name: "",
-    description: "",
-    is_signature: false,
-  })
-
   useEffect(() => {
     if (open && packageId) {
       loadMenuPackage()
@@ -100,12 +93,22 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
     const supabase = createClient()
     const { data, error } = await supabase
       .from("menu_items")
-      .select("id, name, description, category, price")
-      .eq("is_active", true)
+      .select("id, name, description, base_price")
+      .eq("is_available", true)
       .order("name")
 
     if (!error && data) {
-      setAvailableMenuItems(data)
+      // Transform to match expected format
+      const transformedData = data.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || "",
+        category: "", // Not needed for display
+        price: item.base_price || 0
+      }))
+      setAvailableMenuItems(transformedData)
+    } else {
+      console.error("Failed to load menu items:", error)
     }
   }
 
@@ -199,36 +202,6 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
       onSuccess()
       onOpenChange(false)
     }
-  }
-
-  const addItem = () => {
-    if (!selectedMenuItemId) {
-      setError("Please select a menu item")
-      return
-    }
-
-    const selectedItem = availableMenuItems.find(item => item.id === selectedMenuItemId)
-    if (!selectedItem) return
-
-    // Check if item already exists
-    if (menuPackage.items.some(item => item.name === selectedItem.name)) {
-      setError("This menu item is already added")
-      return
-    }
-
-    const newMenuItem: MenuItem = {
-      name: selectedItem.name,
-      description: selectedItem.description || "",
-      is_signature: newItem.is_signature
-    }
-
-    setMenuPackage({
-      ...menuPackage,
-      items: [...menuPackage.items, newMenuItem]
-    })
-    setSelectedMenuItemId("")
-    setNewItem({ name: "", description: "", is_signature: false })
-    setError(null)
   }
 
   const removeItem = (index: number) => {
@@ -392,88 +365,163 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
 
               {/* Menu Items */}
               <div className="space-y-4">
-                <h3 className="font-semibold">Menu Items *</h3>
-                
-                {/* Add Item Form */}
-                <div className="space-y-3 p-4 rounded-lg bg-muted/30">
-                  <p className="text-sm text-muted-foreground">Select menu items from your menu:</p>
-                  <div className="flex gap-3">
-                    <div className="flex-1">
-                      <Select
-                        value={selectedMenuItemId}
-                        onValueChange={(value) => setSelectedMenuItemId(value || "")}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a menu item..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableMenuItems.length === 0 ? (
-                            <div className="p-2 text-sm text-muted-foreground text-center">
-                              No menu items available
-                            </div>
-                          ) : (
-                            availableMenuItems.map((item) => (
-                              <SelectItem key={item.id} value={item.id}>
-                                <div className="flex items-center justify-between gap-2">
-                                  <span>{item.name}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    ({item.category})
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button onClick={addItem} type="button" size="sm" disabled={!selectedMenuItemId}>
-                      <Plus className="size-4 mr-2" />
-                      Add
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      checked={newItem.is_signature}
-                      onCheckedChange={(checked) => setNewItem({...newItem, is_signature: checked as boolean})}
-                    />
-                    <label className="text-sm">Mark as signature dish</label>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">Menu Items *</h3>
+                  <Button onClick={() => {
+                    // Add empty slot
+                    setMenuPackage({
+                      ...menuPackage,
+                      items: [...menuPackage.items, { name: "", description: "", is_signature: false }]
+                    })
+                  }} type="button" size="sm" variant="outline">
+                    <Plus className="size-4 mr-2" />
+                    Add Item Slot
+                  </Button>
                 </div>
 
-                {/* Items List */}
+                {/* Items Grid */}
                 {menuPackage.items.length > 0 ? (
-                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     {menuPackage.items.map((item, index) => (
                       <div
                         key={index}
-                        className="flex items-start gap-3 p-3 rounded-lg border bg-card"
+                        className="relative group border-2 border-dashed rounded-lg p-4 hover:border-primary/50 transition-colors"
                       >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-sm">{item.name}</span>
-                            {item.is_signature && (
-                              <span className="px-2 py-0.5 rounded-full text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-600">
-                                Signature
-                              </span>
-                            )}
-                          </div>
-                          {item.description && (
-                            <p className="text-xs text-muted-foreground">{item.description}</p>
-                          )}
+                        {/* Slot Number */}
+                        <div className="absolute -top-3 -left-3 size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold shadow-md">
+                          {index + 1}
                         </div>
+
+                        {/* Delete Button */}
                         <button
                           onClick={() => removeItem(index)}
-                          className="p-1 hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
+                          className="absolute -top-2 -right-2 p-1.5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
                           type="button"
                         >
-                          <Trash2 className="size-4" />
+                          <Trash2 className="size-3" />
                         </button>
+
+                        {item.name ? (
+                          /* Selected Item Display */
+                          <div className="space-y-2">
+                            {/* Image placeholder or actual image if available */}
+                            <div className="w-full h-24 bg-muted rounded-md overflow-hidden">
+                              {availableMenuItems.find(mi => mi.name === item.name)?.id && (
+                                <img
+                                  src={`https://via.placeholder.com/150?text=${encodeURIComponent(item.name)}`}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{item.name}</p>
+                              {item.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+                              )}
+                              {item.is_signature && (
+                                <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-600">
+                                  Signature
+                                </span>
+                              )}
+                            </div>
+                            {/* Click to change */}
+                            <Button
+                              onClick={() => {
+                                // Clear this slot to allow re-selection
+                                const newItems = [...menuPackage.items]
+                                newItems[index] = { name: "", description: "", is_signature: false }
+                                setMenuPackage({ ...menuPackage, items: newItems })
+                              }}
+                              variant="ghost"
+                              size="sm"
+                              className="w-full text-xs"
+                              type="button"
+                            >
+                              Change Item
+                            </Button>
+                          </div>
+                        ) : (
+                          /* Empty Slot - Click to Select */
+                          <div className="space-y-3">
+                            <div className="w-full h-24 bg-muted/30 rounded-md flex items-center justify-center border-2 border-dashed">
+                              <p className="text-xs text-muted-foreground">Click to select item</p>
+                            </div>
+                            <Select
+                              value=""
+                              onValueChange={(value) => {
+                                if (value) {
+                                  const selectedItem = availableMenuItems.find(mi => mi.id === value)
+                                  if (selectedItem) {
+                                    // Check if already added
+                                    if (menuPackage.items.some(i => i.name === selectedItem.name)) {
+                                      setError("This item is already added")
+                                      return
+                                    }
+                                    // Update this slot
+                                    const newItems = [...menuPackage.items]
+                                    newItems[index] = {
+                                      name: selectedItem.name,
+                                      description: selectedItem.description,
+                                      is_signature: false
+                                    }
+                                    setMenuPackage({ ...menuPackage, items: newItems })
+                                    setError(null)
+                                  }
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select menu item..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableMenuItems.length === 0 ? (
+                                  <div className="p-2 text-sm text-muted-foreground text-center">
+                                    No menu items available
+                                  </div>
+                                ) : (
+                                  availableMenuItems.map((menuItem) => (
+                                    <SelectItem key={menuItem.id} value={menuItem.id}>
+                                      {menuItem.name}
+                                    </SelectItem>
+                                  ))
+                                )}
+                              </SelectContent>
+                            </Select>
+                            {/* Signature checkbox for new selection */}
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                checked={item.is_signature}
+                                onCheckedChange={(checked) => {
+                                  const newItems = [...menuPackage.items]
+                                  newItems[index].is_signature = checked as boolean
+                                  setMenuPackage({ ...menuPackage, items: newItems })
+                                }}
+                              />
+                              <label className="text-xs">Mark as signature</label>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6 text-sm text-muted-foreground border-2 border-dashed rounded-lg">
-                    No menu items added yet
+                  <div className="text-center py-12 text-sm text-muted-foreground border-2 border-dashed rounded-lg">
+                    <p className="mb-3">No item slots yet</p>
+                    <Button 
+                      onClick={() => {
+                        setMenuPackage({
+                          ...menuPackage,
+                          items: [{ name: "", description: "", is_signature: false }]
+                        })
+                      }} 
+                      type="button" 
+                      size="sm"
+                      variant="outline"
+                    >
+                      <Plus className="size-4 mr-2" />
+                      Add First Item
+                    </Button>
                   </div>
                 )}
               </div>
