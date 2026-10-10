@@ -18,13 +18,19 @@ export default async function ManagerMenuPage() {
     .order("sort_order", { ascending: true })
 
   // Fetch menu items with categories
-  const { data: items } = await supabase
+  const { data: items, error: itemsError } = await supabase
     .from("menu_items")
     .select(`
       *,
       category:food_categories(*)
     `)
     .order("created_at", { ascending: false })
+
+  console.log('Menu items fetch result:', { 
+    itemsCount: items?.length || 0, 
+    error: itemsError?.message,
+    sampleItem: items?.[0]
+  })
 
   return <MenuManager categories={categories || []} items={items || []} />
 }
