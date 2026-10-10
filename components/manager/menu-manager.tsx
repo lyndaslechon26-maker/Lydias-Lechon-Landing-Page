@@ -574,8 +574,12 @@ function ItemCard({
               <Wine className="size-3" />
             </Badge>
           )}
-          {!item.is_available && (
-            <Badge variant="secondary" className="bg-rose-500/90 text-white">
+          {item.is_available ? (
+            <Badge variant="secondary" className="bg-emerald-500/90 text-white text-xs font-medium">
+              Available
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="bg-rose-500/90 text-white text-xs font-medium">
               Unavailable
             </Badge>
           )}
