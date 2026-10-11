@@ -1,5 +1,7 @@
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
   Building2,
@@ -11,32 +13,75 @@ import {
   Eye,
   ToggleLeft,
   ToggleRight,
-  RefreshCw,
-  Download,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/page-header"
 import { StatCard } from "@/components/stat-card"
+import { EditVenueDialog } from "@/components/manager/edit-venue-dialog"
+import { createClient } from "@/lib/supabase/client"
 
-export const dynamic = "force-dynamic"
+export default function ManagerVenuesPage() {
+  const router = useRouter()
+  const [venues, setVenues] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null)
+  useEffect(() => {
+    loadVenues()
+  }, [])
 
-export default async function ManagerVenuesPage() {
-  const supabase = await createClient()
-  
-  // Check authentication
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect("/events/login?next=/manager/venues")
+  const loadVenues = async () => {
+    setLoading(true)
+    const supabase = createClient()
+    
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      router.push("/events/login?next=/manager/venues")
+      return
+    }
 
-  // Fetch venues
-  const { data: venues, error } = await supabase
-    .from("event_venues")
-    .select("*")
-    .order("created_at", { ascending: false })
+    const { data, error } = await supabase
+      .from("event_venues")
+      .select("*")
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+      return
+    }
+
+    setVenues(data || [])
+    setLoading(false)
+  }
+
+  const handleAddVenue = () => {
+    setSelectedVenueId(null)
+    setEditDialogOpen(true)
+  }
+
+  const handleEditVenue = (venueId: string) => {
+    setSelectedVenueId(venueId)
+    setEditDialogOpen(true)
+  }
+
+  const handleDialogSuccess = () => {
+    loadVenues()
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">Loading venues...</p>
+      </div>
+    )
+  }
 
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-destructive">{error.message}</p>
+        <p className="text-destructive">{error}</p>
       </div>
     )
   }
@@ -52,20 +97,14 @@ export default async function ManagerVenuesPage() {
         crumbs={[{ label: "Lydia's Lechon" }, { label: "Manager" }, { label: "Venues" }]}
         actions={
           <>
-            <Button variant="outline" size="sm">
-              <RefreshCw className="mr-2 size-4" />
-              Refresh
+            <Button 
+              size="sm" 
+              className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+              onClick={handleAddVenue}
+            >
+              <Plus className="size-4 mr-2" />
+              Add Venue
             </Button>
-            <Button variant="outline" size="sm">
-              <Download className="mr-2 size-4" />
-              Export
-            </Button>
-            <Link href="/manager/venues/new">
-              <Button size="sm" className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700">
-                <Plus className="size-4 mr-2" />
-                Add Venue
-              </Button>
-            </Link>
           </>
         }
       />
@@ -106,12 +145,13 @@ export default async function ManagerVenuesPage() {
             <p className="text-muted-foreground mb-6">
               Add your first venue to start accepting bookings
             </p>
-            <Link href="/manager/venues/new">
-              <Button className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700">
-                <Plus className="size-4 mr-2" />
-                Add Your First Venue
-              </Button>
-            </Link>
+            <Button 
+              className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+              onClick={handleAddVenue}
+            >
+              <Plus className="size-4 mr-2" />
+              Add Your First Venue
+            </Button>
           </div>
         ) : (
           <div className="grid gap-6 lg:grid-cols-2 xl:gap-8">
@@ -215,15 +255,14 @@ export default async function ManagerVenuesPage() {
                         View Public
                       </Button>
                     </Link>
-                    <Link
-                      href={`/manager/venues/${venue.id}/edit`}
+                    <Button 
+                      size="sm" 
                       className="flex-1"
+                      onClick={() => handleEditVenue(venue.id)}
                     >
-                      <Button size="sm" className="w-full">
-                        <Edit className="size-4 mr-2" />
-                        Edit
-                      </Button>
-                    </Link>
+                      <Edit className="size-4 mr-2" />
+                      Edit
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -260,15 +299,15 @@ export default async function ManagerVenuesPage() {
                   </div>
 
                   <div className="flex gap-2 pt-3 border-t">
-                    <Link
-                      href={`/manager/venues/${venue.id}/edit`}
-                      className="flex-1"
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => handleEditVenue(venue.id)}
                     >
-                      <Button variant="outline" size="sm" className="w-full">
-                        <Edit className="size-4 mr-2" />
-                        Edit
-                      </Button>
-                    </Link>
+                      <Edit className="size-4 mr-2" />
+                      Edit
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -276,6 +315,14 @@ export default async function ManagerVenuesPage() {
           </div>
         </details>
       )}
+
+      {/* Edit Venue Dialog */}
+      <EditVenueDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        venueId={selectedVenueId}
+        onSuccess={handleDialogSuccess}
+      />
     </div>
   )
 }
