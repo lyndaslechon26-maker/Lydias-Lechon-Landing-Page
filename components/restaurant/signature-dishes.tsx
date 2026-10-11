@@ -1,14 +1,24 @@
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { SignatureDishesClient } from "./signature-dishes-client"
 
 export async function SignatureDishes() {
-  const supabase = await createClient()
-  const { data: menuItems } = await supabase
+  const supabase = await createAdminClient()
+  
+  // Fetch best selling items (max 5 items marked as best selling)
+  const { data: menuItems, error } = await supabase
     .from('menu_items')
     .select('id, name, description, base_price, image_url, category_id')
     .eq('is_available', true)
-    .order('base_price', { ascending: false })
-    .limit(10)
+    .eq('is_best_selling', true)
+    .order('created_at', { ascending: false })
+    .limit(5)
+
+  // Debug logging
+  console.log('SignatureDishes Query Results:', {
+    itemsFound: menuItems?.length || 0,
+    error: error?.message,
+    items: menuItems?.map(i => i.name)
+  })
 
   let dishes = menuItems?.map((item, index) => ({
     id: item.id,
@@ -16,12 +26,13 @@ export async function SignatureDishes() {
     description: item.description || 'Delicious Filipino dish',
     price: item.base_price,
     image: item.image_url || `https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80`,
-    category: 'Main Course',
-    isBestSeller: index === 0
+    category: 'Featured', // Don't use "Best Seller" as category since we have a separate badge
+    isBestSeller: true // All items here are best sellers
   })) || []
 
-  // Fallback data if no menu items in database
+  // Fallback data if no best selling items marked yet
   if (dishes.length === 0) {
+    console.log('Using fallback data - no best sellers found')
     dishes = [
       {
         id: '1',

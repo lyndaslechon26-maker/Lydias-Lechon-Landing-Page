@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogOverlay,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import {
   Select,
@@ -25,11 +26,8 @@ import {
   Upload,
   Trash2,
   Loader2,
-  Leaf,
-  Eye,
-  EyeOff,
 } from "lucide-react"
-import { updateMenuPackage, getMenuPackageById, deleteMenuPackage } from "@/app/actions/manager-menu-packages"
+import { updateMenuPackage, getMenuPackageById, deleteMenuPackage, createMenuPackage } from "@/app/actions/manager-menu-packages"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { createClient } from "@/lib/supabase/client"
@@ -39,6 +37,7 @@ interface MenuItem {
   name: string
   description: string
   is_signature: boolean
+  quantity: number
 }
 
 interface MenuItemFromDB {
@@ -47,6 +46,7 @@ interface MenuItemFromDB {
   description: string
   category: string
   price: number
+  image_url?: string
 }
 
 interface EditMenuPackageDialogProps {
@@ -56,6 +56,14 @@ interface EditMenuPackageDialogProps {
   onSuccess: () => void
 }
 
+interface PackageCategory {
+  id: string
+  name: string
+  description: string | null
+  sort_order: number
+  is_active: boolean
+}
+
 export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess }: EditMenuPackageDialogProps) {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -63,29 +71,43 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [availableMenuItems, setAvailableMenuItems] = useState<MenuItemFromDB[]>([])
+  const [packageCategories, setPackageCategories] = useState<PackageCategory[]>([])
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [menuPackage, setMenuPackage] = useState({
     name: "",
-    category: "buffet",
+    category_id: "", // Changed from category to category_id
     description: "",
-    price_per_person: 500,
-    min_guests: 50,
+    bundle_price: 500,
+    serves_persons: 50,
     items: [] as MenuItem[],
-    dietary_info: {
-      vegetarian: false,
-      vegan: false,
-      halal: false,
-      gluten_free: false,
-    },
     photo: "",
     is_active: true,
+    is_best_selling: false,
   })
 
   useEffect(() => {
     if (open && packageId) {
       loadMenuPackage()
       loadAvailableMenuItems()
+      loadPackageCategories()
+    } else if (open && !packageId) {
+      // Create mode - load categories and menu items, reset form
+      loadAvailableMenuItems()
+      loadPackageCategories()
+      setMenuPackage({
+        name: "",
+        category_id: "",
+        description: "",
+        bundle_price: 500,
+        serves_persons: 50,
+        items: [],
+        photo: "",
+        is_active: true,
+        is_best_selling: false,
+      })
+      setLoading(false)
     }
   }, [open, packageId])
 
@@ -93,7 +115,7 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
     const supabase = createClient()
     const { data, error } = await supabase
       .from("menu_items")
-      .select("id, name, description, base_price")
+      .select("id, name, description, base_price, image_url")
       .eq("is_available", true)
       .order("name")
 
@@ -104,11 +126,27 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
         name: item.name,
         description: item.description || "",
         category: "", // Not needed for display
-        price: item.base_price || 0
+        price: item.base_price || 0,
+        image_url: item.image_url || ""
       }))
       setAvailableMenuItems(transformedData)
     } else {
       console.error("Failed to load menu items:", error)
+    }
+  }
+
+  const loadPackageCategories = async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from("package_categories")
+      .select("id, name, description, sort_order, is_active")
+      .eq("is_active", true)
+      .order("sort_order")
+
+    if (!error && data) {
+      setPackageCategories(data)
+    } else {
+      console.error("Failed to load package categories:", error)
     }
   }
 
@@ -124,29 +162,88 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
       return
     }
 
+    // Get menu items from database to look up descriptions and images
+    const supabase = createClient()
+    const { data: menuItemsData } = await supabase
+      .from("menu_items")
+      .select("name, description, image_url")
+      .eq("is_available", true)
+
+    const menuItemsMap = new Map(
+      (menuItemsData || []).map(item => [
+        item.name, 
+        { description: item.description || "", image_url: item.image_url || "" }
+      ])
+    )
+
+    // Transform items to include quantity and descriptions
+    const itemsWithQuantity = (data.items || []).map((item: any) => {
+      // Handle string format (old data)
+      if (typeof item === 'string') {
+        // Try to parse if it looks like JSON
+        if (item.trim().startsWith('{')) {
+          try {
+            const parsed = JSON.parse(item)
+            if (parsed.name) {
+              const dbItem = menuItemsMap.get(parsed.name)
+              return {
+                name: String(parsed.name),
+                description: String(parsed.description || dbItem?.description || ""),
+                is_signature: Boolean(parsed.is_signature),
+                quantity: Number(parsed.quantity) || 1
+              }
+            }
+          } catch (e) {
+            console.warn("Failed to parse item JSON string:", item, e)
+          }
+        }
+        // Regular string - just item name
+        const dbItem = menuItemsMap.get(item)
+        return {
+          name: item,
+          description: dbItem?.description || "",
+          is_signature: false,
+          quantity: 1
+        }
+      }
+      
+      // Handle object format (new data) - but validate it's a proper object
+      if (item && typeof item === 'object' && item.name) {
+        const dbItem = menuItemsMap.get(item.name)
+        return {
+          name: String(item.name),
+          description: String(item.description || dbItem?.description || ""),
+          is_signature: Boolean(item.is_signature),
+          quantity: Number(item.quantity) || 1
+        }
+      }
+      
+      // Invalid format - return empty object
+      console.warn("Invalid item format:", item)
+      return {
+        name: "",
+        description: "",
+        is_signature: false,
+        quantity: 1
+      }
+    }).filter((item: MenuItem) => item.name !== "") // Remove invalid items
+
     setMenuPackage({
       name: data.name || "",
-      category: data.category || "buffet",
+      category_id: data.category_id || "", // Changed from category to category_id
       description: data.description || "",
-      price_per_person: Number(data.price_per_person) || 500,
-      min_guests: data.min_order || 50,
-      items: data.items || [],
-      dietary_info: data.dietary_info || {
-        vegetarian: false,
-        vegan: false,
-        halal: false,
-        gluten_free: false,
-      },
+      bundle_price: Number(data.bundle_price) || 500,
+      serves_persons: data.serves_persons || 50,
+      items: itemsWithQuantity,
       photo: data.photo || "",
       is_active: data.is_active ?? true,
+      is_best_selling: data.is_best_selling ?? false,
     })
     setLoading(false)
   }
 
   const handleSave = async () => {
-    if (!packageId) return
-    
-    if (!menuPackage.name || !menuPackage.category) {
+    if (!menuPackage.name || !menuPackage.category_id) {
       setError("Please fill in all required fields")
       return
     }
@@ -159,35 +256,55 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
     setSaving(true)
     setError(null)
     
-    // Transform items to string array for the action
-    const itemsArray = menuPackage.items.map(item => item.name)
+    // Transform items to include full data (name, quantity, description, is_signature)
+    const itemsWithFullData = menuPackage.items.map(item => ({
+      name: item.name,
+      description: item.description || "",
+      quantity: item.quantity,
+      is_signature: item.is_signature || false
+    }))
     
-    const result = await updateMenuPackage(packageId, {
-      name: menuPackage.name,
-      category: menuPackage.category,
-      description: menuPackage.description,
-      price_per_person: menuPackage.price_per_person,
-      min_guests: menuPackage.min_guests,
-      items: itemsArray,
-      is_active: menuPackage.is_active,
-    })
+    const result = packageId
+      ? await updateMenuPackage(packageId, {
+          name: menuPackage.name,
+          category_id: menuPackage.category_id,
+          description: menuPackage.description,
+          bundle_price: menuPackage.bundle_price,
+          serves_persons: menuPackage.serves_persons,
+          items: itemsWithFullData,
+          photo: menuPackage.photo || undefined,
+          is_active: menuPackage.is_active,
+          is_best_selling: menuPackage.is_best_selling,
+        })
+      : await createMenuPackage({
+          name: menuPackage.name,
+          category_id: menuPackage.category_id,
+          description: menuPackage.description,
+          bundle_price: menuPackage.bundle_price,
+          serves_persons: menuPackage.serves_persons,
+          items: itemsWithFullData,
+          photo: menuPackage.photo || undefined,
+          is_active: menuPackage.is_active,
+          is_best_selling: menuPackage.is_best_selling,
+        })
     
     if (result?.error) {
       setError(result.error)
       setSaving(false)
-    } else {
+    } else if (result?.success) {
       setSaving(false)
       onSuccess()
       onOpenChange(false)
+    } else {
+      // Unexpected result format
+      console.error("Unexpected save result:", result)
+      setError("Failed to save changes")
+      setSaving(false)
     }
   }
 
   const handleDelete = async () => {
     if (!packageId) return
-    
-    if (!confirm("Are you sure you want to delete this menu package? This action cannot be undone.")) {
-      return
-    }
 
     setDeleting(true)
     setError(null)
@@ -197,8 +314,10 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
     if (result?.error) {
       setError(result.error)
       setDeleting(false)
+      setShowDeleteDialog(false)
     } else {
       setDeleting(false)
+      setShowDeleteDialog(false)
       onSuccess()
       onOpenChange(false)
     }
@@ -267,8 +386,8 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
       <DialogOverlay className="bg-gradient-to-br from-black/70 via-black/50 to-black/70 backdrop-blur-md" />
       <DialogContent className="max-w-4xl max-h-[90vh] bg-white dark:bg-zinc-900">
         <DialogHeader>
-          <DialogTitle>Edit Menu Package</DialogTitle>
-          <DialogDescription>Update menu package information</DialogDescription>
+          <DialogTitle>{packageId ? 'Edit Menu Package' : 'Create Menu Package'}</DialogTitle>
+          <DialogDescription>{packageId ? 'Update menu package information' : 'Create a new menu package'}</DialogDescription>
         </DialogHeader>
 
         {loading ? (
@@ -288,231 +407,181 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
               <div className="space-y-4">
                 <h3 className="font-semibold">Basic Information</h3>
                 
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Package Name <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      value={menuPackage.name}
-                      onChange={(e) => setMenuPackage({...menuPackage, name: e.target.value})}
-                      placeholder="e.g., Classic Filipino Buffet"
-                    />
+                <div className="grid sm:grid-cols-[1fr,300px] gap-6">
+                  {/* Left Column - Form Fields */}
+                  <div className="space-y-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Package Name <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          value={menuPackage.name}
+                          onChange={(e) => setMenuPackage({...menuPackage, name: e.target.value})}
+                          placeholder="e.g., Classic Filipino Buffet"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Category <span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          value={menuPackage.category_id}
+                          onValueChange={(value) => value && setMenuPackage({...menuPackage, category_id: value})}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a category">
+                              {menuPackage.category_id && packageCategories.length > 0
+                                ? packageCategories.find(c => c.id === menuPackage.category_id)?.name || "Select a category"
+                                : "Select a category"}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent className="w-auto min-w-[200px]">
+                            {packageCategories.length === 0 ? (
+                              <div className="p-2 text-sm text-muted-foreground text-center">
+                                No categories available
+                              </div>
+                            ) : (
+                              packageCategories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id} className="whitespace-nowrap">
+                                  {cat.name}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Description</label>
+                      <Textarea
+                        value={menuPackage.description}
+                        onChange={(e) => setMenuPackage({...menuPackage, description: e.target.value})}
+                        placeholder="Describe this menu package..."
+                        rows={3}
+                      />
+                    </div>
+
+                    {/* Pricing & Requirements moved here */}
+                    <div className="rounded-lg border p-4 space-y-4">
+                      <h4 className="font-medium">Pricing & Requirements</h4>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Package Price (₱) *</label>
+                          <Input
+                            type="number"
+                            value={menuPackage.bundle_price}
+                            onChange={(e) => setMenuPackage({...menuPackage, bundle_price: Number(e.target.value)})}
+                            min="0"
+                            step="50"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Current: ₱{menuPackage.bundle_price.toLocaleString()}
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Good for (persons) *</label>
+                          <Input
+                            type="number"
+                            value={menuPackage.serves_persons}
+                            onChange={(e) => setMenuPackage({...menuPackage, serves_persons: Number(e.target.value)})}
+                            min="1"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Number of persons this package can serve
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Category <span className="text-red-500">*</span>
-                    </label>
-                    <Select
-                      value={menuPackage.category}
-                      onValueChange={(value) => value && setMenuPackage({...menuPackage, category: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="buffet">Buffet</SelectItem>
-                        <SelectItem value="plated">Plated Meal</SelectItem>
-                        <SelectItem value="drinks">Drinks Package</SelectItem>
-                        <SelectItem value="dessert">Dessert Package</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  {/* Right Column - Package Photo Upload Area */}
+                  <div className="border-2 border-dashed rounded-lg p-4 flex flex-col">
+                    <label className="block text-sm font-medium mb-2">Package Photo</label>
+                    
+                    {menuPackage.photo ? (
+                      <div className="relative group rounded-lg overflow-hidden border flex-1 min-h-[250px]">
+                        <img
+                          src={menuPackage.photo}
+                          alt="Package preview"
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          onClick={() => setMenuPackage({...menuPackage, photo: ""})}
+                          className="absolute top-2 right-2 p-2 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                          type="button"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center flex-1 min-h-[250px] bg-muted/30 rounded-lg">
+                        <Upload className="size-12 text-muted-foreground/50 mb-4" />
+                        <p className="text-sm text-muted-foreground mb-4">No photo uploaded</p>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                          disabled={uploadingPhoto}
+                        />
+                        <Button 
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploadingPhoto}
+                          type="button"
+                          variant="default"
+                          size="sm"
+                        >
+                          {uploadingPhoto ? (
+                            <>
+                              <Loader2 className="size-4 mr-2 animate-spin" />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="size-4 mr-2" />
+                              Upload Photo
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Description</label>
-                  <Textarea
-                    value={menuPackage.description}
-                    onChange={(e) => setMenuPackage({...menuPackage, description: e.target.value})}
-                    placeholder="Describe this menu package..."
-                    rows={3}
-                  />
                 </div>
               </div>
 
-              {/* Pricing */}
-              <div className="space-y-4">
-                <h3 className="font-semibold">Pricing & Requirements</h3>
-                
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Package Price (₱) *</label>
-                    <Input
-                      type="number"
-                      value={menuPackage.price_per_person}
-                      onChange={(e) => setMenuPackage({...menuPackage, price_per_person: Number(e.target.value)})}
-                      min="0"
-                      step="50"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Current: ₱{menuPackage.price_per_person.toLocaleString()}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Minimum Order (pax) *</label>
-                    <Input
-                      type="number"
-                      value={menuPackage.min_guests}
-                      onChange={(e) => setMenuPackage({...menuPackage, min_guests: Number(e.target.value)})}
-                      min="1"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Menu Items */}
+              {/* Menu Items - Rebuilt Clean */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold">Menu Items *</h3>
-                  <Button onClick={() => {
-                    // Add empty slot
-                    setMenuPackage({
-                      ...menuPackage,
-                      items: [...menuPackage.items, { name: "", description: "", is_signature: false }]
-                    })
-                  }} type="button" size="sm" variant="outline">
+                  <Button 
+                    onClick={() => {
+                      setMenuPackage({
+                        ...menuPackage,
+                        items: [...menuPackage.items, { name: "", description: "", is_signature: false, quantity: 1 }]
+                      })
+                    }} 
+                    type="button" 
+                    size="sm" 
+                    variant="outline"
+                  >
                     <Plus className="size-4 mr-2" />
                     Add Item Slot
                   </Button>
                 </div>
 
-                {/* Items Grid */}
-                {menuPackage.items.length > 0 ? (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {menuPackage.items.map((item, index) => (
-                      <div
-                        key={index}
-                        className="relative group border-2 border-dashed rounded-lg p-4 hover:border-primary/50 transition-colors"
-                      >
-                        {/* Slot Number */}
-                        <div className="absolute -top-3 -left-3 size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold shadow-md">
-                          {index + 1}
-                        </div>
-
-                        {/* Delete Button */}
-                        <button
-                          onClick={() => removeItem(index)}
-                          className="absolute -top-2 -right-2 p-1.5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
-                          type="button"
-                        >
-                          <Trash2 className="size-3" />
-                        </button>
-
-                        {item.name ? (
-                          /* Selected Item Display */
-                          <div className="space-y-2">
-                            {/* Image placeholder or actual image if available */}
-                            <div className="w-full h-24 bg-muted rounded-md overflow-hidden">
-                              {availableMenuItems.find(mi => mi.name === item.name)?.id && (
-                                <img
-                                  src={`https://via.placeholder.com/150?text=${encodeURIComponent(item.name)}`}
-                                  alt={item.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-medium text-sm">{item.name}</p>
-                              {item.description && (
-                                <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
-                              )}
-                              {item.is_signature && (
-                                <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-600">
-                                  Signature
-                                </span>
-                              )}
-                            </div>
-                            {/* Click to change */}
-                            <Button
-                              onClick={() => {
-                                // Clear this slot to allow re-selection
-                                const newItems = [...menuPackage.items]
-                                newItems[index] = { name: "", description: "", is_signature: false }
-                                setMenuPackage({ ...menuPackage, items: newItems })
-                              }}
-                              variant="ghost"
-                              size="sm"
-                              className="w-full text-xs"
-                              type="button"
-                            >
-                              Change Item
-                            </Button>
-                          </div>
-                        ) : (
-                          /* Empty Slot - Click to Select */
-                          <div className="space-y-3">
-                            <div className="w-full h-24 bg-muted/30 rounded-md flex items-center justify-center border-2 border-dashed">
-                              <p className="text-xs text-muted-foreground">Click to select item</p>
-                            </div>
-                            <Select
-                              value=""
-                              onValueChange={(value) => {
-                                if (value) {
-                                  const selectedItem = availableMenuItems.find(mi => mi.id === value)
-                                  if (selectedItem) {
-                                    // Check if already added
-                                    if (menuPackage.items.some(i => i.name === selectedItem.name)) {
-                                      setError("This item is already added")
-                                      return
-                                    }
-                                    // Update this slot
-                                    const newItems = [...menuPackage.items]
-                                    newItems[index] = {
-                                      name: selectedItem.name,
-                                      description: selectedItem.description,
-                                      is_signature: false
-                                    }
-                                    setMenuPackage({ ...menuPackage, items: newItems })
-                                    setError(null)
-                                  }
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select menu item..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {availableMenuItems.length === 0 ? (
-                                  <div className="p-2 text-sm text-muted-foreground text-center">
-                                    No menu items available
-                                  </div>
-                                ) : (
-                                  availableMenuItems.map((menuItem) => (
-                                    <SelectItem key={menuItem.id} value={menuItem.id}>
-                                      {menuItem.name}
-                                    </SelectItem>
-                                  ))
-                                )}
-                              </SelectContent>
-                            </Select>
-                            {/* Signature checkbox for new selection */}
-                            <div className="flex items-center gap-2">
-                              <Checkbox
-                                checked={item.is_signature}
-                                onCheckedChange={(checked) => {
-                                  const newItems = [...menuPackage.items]
-                                  newItems[index].is_signature = checked as boolean
-                                  setMenuPackage({ ...menuPackage, items: newItems })
-                                }}
-                              />
-                              <label className="text-xs">Mark as signature</label>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-sm text-muted-foreground border-2 border-dashed rounded-lg">
-                    <p className="mb-3">No item slots yet</p>
+                {menuPackage.items.length === 0 ? (
+                  <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-3">No menu items added yet</p>
                     <Button 
                       onClick={() => {
                         setMenuPackage({
                           ...menuPackage,
-                          items: [{ name: "", description: "", is_signature: false }]
+                          items: [{ name: "", description: "", is_signature: false, quantity: 1 }]
                         })
                       }} 
                       type="button" 
@@ -523,85 +592,137 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
                       Add First Item
                     </Button>
                   </div>
-                )}
-              </div>
+                ) : (
+                  <div className="space-y-3">
+                    {menuPackage.items.map((item, index) => (
+                      <div key={index} className="border-2 rounded-lg p-4 hover:border-primary/50 transition-colors">
+                        {item.name ? (
+                          <div className="flex items-center gap-4">
+                            {/* Number Badge */}
+                            <div className="flex-shrink-0 size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+                              {index + 1}
+                            </div>
 
-              {/* Dietary Information */}
-              <div className="space-y-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Leaf className="size-4 text-green-600" />
-                  Dietary Information
-                </h3>
-                
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {Object.entries(menuPackage.dietary_info).map(([key, value]) => (
-                    <div key={key} className="flex items-center gap-2 p-2 rounded-lg border">
-                      <Checkbox
-                        checked={value}
-                        onCheckedChange={(checked) => 
-                          setMenuPackage({
-                            ...menuPackage,
-                            dietary_info: {...menuPackage.dietary_info, [key]: checked as boolean}
-                          })
-                        }
-                      />
-                      <label className="text-sm capitalize cursor-pointer">
-                        {key.replace('_', ' ')}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                            {/* Item Image */}
+                            <div className="flex-shrink-0 w-16 h-16 bg-muted rounded-md overflow-hidden">
+                              <img
+                                src={availableMenuItems.find(mi => mi.name === item.name)?.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&size=64&background=random`}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&size=64&background=random`
+                                }}
+                              />
+                            </div>
 
-              {/* Photo */}
-              <div className="space-y-4">
-                <h3 className="font-semibold">Package Photo</h3>
-                
-                <div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    disabled={uploadingPhoto}
-                  />
-                  <Button 
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingPhoto}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                  >
-                    {uploadingPhoto ? (
-                      <>
-                        <Loader2 className="size-4 mr-2 animate-spin" />
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="size-4 mr-2" />
-                        Upload Photo
-                      </>
-                    )}
-                  </Button>
-                </div>
+                            {/* Item Info */}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm">{item.name}</p>
+                              {item.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-1">{item.description}</p>
+                              )}
+                            </div>
 
-                {menuPackage.photo && (
-                  <div className="relative group rounded-lg overflow-hidden border max-w-xs">
-                    <img
-                      src={menuPackage.photo}
-                      alt="Package preview"
-                      className="w-full h-32 object-cover"
-                    />
-                    <button
-                      onClick={() => setMenuPackage({...menuPackage, photo: ""})}
-                      className="absolute top-2 right-2 p-1.5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                      type="button"
-                    >
-                      <Trash2 className="size-3" />
-                    </button>
+                            {/* Quantity Controls */}
+                            <div className="flex items-center gap-2 border rounded-lg px-3 py-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newItems = [...menuPackage.items]
+                                  if (newItems[index].quantity > 1) {
+                                    newItems[index].quantity = newItems[index].quantity - 1
+                                    setMenuPackage({ ...menuPackage, items: newItems })
+                                  }
+                                }}
+                                className="text-lg font-bold hover:text-primary px-2"
+                              >
+                                -
+                              </button>
+                              <span className="text-sm font-medium min-w-[3ch] text-center">
+                                {item.quantity}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newItems = [...menuPackage.items]
+                                  newItems[index].quantity = newItems[index].quantity + 1
+                                  setMenuPackage({ ...menuPackage, items: newItems })
+                                }}
+                                className="text-lg font-bold hover:text-primary px-2"
+                              >
+                                +
+                              </button>
+                            </div>
+
+                            {/* Delete Button */}
+                            <button
+                              onClick={() => removeItem(index)}
+                              className="p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"
+                              type="button"
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-4">
+                            {/* Number Badge */}
+                            <div className="flex-shrink-0 size-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-bold">
+                              {index + 1}
+                            </div>
+
+                            {/* Dropdown */}
+                            <div className="flex-1">
+                              <Select
+                                value=""
+                                onValueChange={(value) => {
+                                  const selectedItem = availableMenuItems.find(mi => mi.id === value)
+                                  if (selectedItem) {
+                                    if (menuPackage.items.some(i => i.name === selectedItem.name)) {
+                                      setError("This item is already added")
+                                      return
+                                    }
+                                    const newItems = [...menuPackage.items]
+                                    newItems[index] = {
+                                      name: selectedItem.name,
+                                      description: selectedItem.description,
+                                      is_signature: false,
+                                      quantity: 1
+                                    }
+                                    setMenuPackage({ ...menuPackage, items: newItems })
+                                    setError(null)
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="border-dashed">
+                                  <SelectValue placeholder="Click to select menu item" />
+                                </SelectTrigger>
+                                <SelectContent className="max-w-[400px]">
+                                  {availableMenuItems.map((menuItem) => (
+                                    <SelectItem key={menuItem.id} value={menuItem.id} className="whitespace-normal">
+                                      <div>
+                                        <div className="font-medium">{menuItem.name}</div>
+                                        {menuItem.description && (
+                                          <div className="text-xs text-muted-foreground">{menuItem.description}</div>
+                                        )}
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Delete Button */}
+                            <button
+                              onClick={() => removeItem(index)}
+                              className="p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"
+                              type="button"
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -610,31 +731,60 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
               <div className="space-y-4">
                 <h3 className="font-semibold">Settings</h3>
                 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">Active Status</p>
-                    <p className="text-xs text-muted-foreground">
-                      {menuPackage.is_active ? "Visible to customers" : "Hidden from customers"}
-                    </p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {/* Active Status */}
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">Active Status</p>
+                      <p className="text-xs text-muted-foreground">
+                        {menuPackage.is_active ? "Visible to customers" : "Hidden from customers"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={menuPackage.is_active}
+                      onClick={() => setMenuPackage({...menuPackage, is_active: !menuPackage.is_active})}
+                      className={`
+                        relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2
+                        ${menuPackage.is_active ? 'bg-orange-500' : 'bg-gray-300'}
+                      `}
+                    >
+                      <span
+                        className={`
+                          inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                          ${menuPackage.is_active ? 'translate-x-6' : 'translate-x-1'}
+                        `}
+                      />
+                    </button>
                   </div>
-                  <Button
-                    variant={menuPackage.is_active ? "default" : "outline"}
-                    onClick={() => setMenuPackage({...menuPackage, is_active: !menuPackage.is_active})}
-                    type="button"
-                    size="sm"
-                  >
-                    {menuPackage.is_active ? (
-                      <>
-                        <Eye className="size-4 mr-2" />
-                        Active
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff className="size-4 mr-2" />
-                        Inactive
-                      </>
-                    )}
-                  </Button>
+
+                  {/* Best Seller */}
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">Best Seller</p>
+                      <p className="text-xs text-muted-foreground">
+                        {menuPackage.is_best_selling ? "Marked as best seller" : "Not marked"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={menuPackage.is_best_selling}
+                      onClick={() => setMenuPackage({...menuPackage, is_best_selling: !menuPackage.is_best_selling})}
+                      className={`
+                        relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2
+                        ${menuPackage.is_best_selling ? 'bg-amber-500' : 'bg-gray-300'}
+                      `}
+                    >
+                      <span
+                        className={`
+                          inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                          ${menuPackage.is_best_selling ? 'translate-x-6' : 'translate-x-1'}
+                        `}
+                      />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -643,26 +793,19 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
 
         {/* Actions */}
         <div className="flex justify-between gap-4 pt-4 border-t">
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={saving || deleting || loading}
-            size="sm"
-          >
-            {deleting ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
-                Deleting...
-              </>
-            ) : (
-              <>
-                <Trash2 className="size-4 mr-2" />
-                Delete
-              </>
-            )}
-          </Button>
+          {packageId && (
+            <Button
+              variant="destructive"
+              onClick={() => setShowDeleteDialog(true)}
+              disabled={saving || deleting || loading}
+              size="sm"
+            >
+              <Trash2 className="size-4 mr-2" />
+              Delete
+            </Button>
+          )}
 
-          <div className="flex gap-3">
+          <div className={`flex gap-3 ${packageId ? '' : 'ml-auto'}`}>
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
@@ -680,18 +823,56 @@ export function EditMenuPackageDialog({ open, onOpenChange, packageId, onSuccess
               {saving ? (
                 <>
                   <Loader2 className="size-4 mr-2 animate-spin" />
-                  Saving...
+                  {packageId ? 'Saving...' : 'Creating...'}
                 </>
               ) : (
                 <>
                   <Save className="size-4 mr-2" />
-                  Save Changes
+                  {packageId ? 'Save Changes' : 'Create Package'}
                 </>
               )}
             </Button>
           </div>
         </div>
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader className="space-y-3">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+              <Trash2 className="size-6 text-red-600 dark:text-red-500" />
+            </div>
+            <DialogTitle className="text-center text-xl">Delete Menu Package?</DialogTitle>
+            <DialogDescription className="text-center">
+              This action cannot be undone. This menu package will be permanently removed.
+            </DialogDescription>
+            {menuPackage.name && (
+              <div className="rounded-lg border bg-muted/50 p-3">
+                <p className="text-center text-sm font-medium">{menuPackage.name}</p>
+              </div>
+            )}
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleting}
+              className="w-full sm:w-auto sm:flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="w-full sm:w-auto sm:flex-1"
+            >
+              {deleting ? "Deleting..." : "Delete Package"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   )
 }

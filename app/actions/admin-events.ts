@@ -653,7 +653,7 @@ export async function getAllMenuPackages(category?: string) {
   const supabase = await createClient()
 
   let query = supabase
-    .from("event_menu_packages")
+    .from("menu_packages")
     .select("*")
     .order("sort_order")
 
@@ -703,7 +703,7 @@ export async function getMenuPackageById(id: string) {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from("event_menu_packages")
+    .from("menu_packages")
     .select("*")
     .eq("id", id)
 
@@ -734,7 +734,7 @@ export async function createMenuPackage(data: {
 
   // Get max sort_order
   const { data: packages } = await supabase
-    .from("event_menu_packages")
+    .from("menu_packages")
     .select("sort_order")
     .order("sort_order", { ascending: false })
     .limit(1)
@@ -742,7 +742,7 @@ export async function createMenuPackage(data: {
   const sort_order = packages && packages.length > 0 ? packages[0].sort_order + 1 : 1
 
   const { data: newPackages, error } = await supabase
-    .from("event_menu_packages")
+    .from("menu_packages")
     .insert({
       ...data,
       sort_order,
@@ -775,7 +775,7 @@ export async function updateMenuPackage(
   const supabase = await createClient()
 
   const { data: packages, error } = await supabase
-    .from("event_menu_packages")
+    .from("menu_packages")
     .update(data)
     .eq("id", id)
     .select()
@@ -814,7 +814,7 @@ export async function deleteMenuPackage(id: string) {
   }
 
   const { error } = await supabase
-    .from("event_menu_packages")
+    .from("menu_packages")
     .delete()
     .eq("id", id)
 

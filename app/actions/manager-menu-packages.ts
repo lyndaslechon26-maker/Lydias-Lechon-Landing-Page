@@ -9,18 +9,20 @@ import { createClient } from "@/lib/supabase/server"
 
 export async function createMenuPackage(data: {
   name: string
-  category: string
+  category_id: string
   description?: string
-  price_per_person: number
-  min_guests: number
-  items: string[]
+  bundle_price: number
+  serves_persons: number
+  items: Array<{ name: string; quantity: number; description?: string; is_signature?: boolean }> | string[]
+  photo?: string
   is_active: boolean
+  is_best_selling: boolean
 }) {
   const supabase = await createClient()
 
   // Get max sort_order
   const { data: packages } = await supabase
-    .from("event_menu_packages")
+    .from("menu_packages")
     .select("sort_order")
     .order("sort_order", { ascending: false })
     .limit(1)
@@ -28,21 +30,23 @@ export async function createMenuPackage(data: {
   const nextSortOrder = packages && packages.length > 0 ? packages[0].sort_order + 1 : 0
 
   const { error } = await supabase
-    .from("event_menu_packages")
+    .from("menu_packages")
     .insert({
       name: data.name,
-      category: data.category,
+      category_id: data.category_id,
       description: data.description || null,
-      price_per_person: data.price_per_person,
-      min_guests: data.min_guests,
+      bundle_price: data.bundle_price,
+      serves_persons: data.serves_persons,
       items: data.items || [],
+      photo: data.photo || null,
       is_active: data.is_active,
+      is_best_selling: data.is_best_selling,
       sort_order: nextSortOrder,
     })
 
   if (error) {
     console.error("Failed to create menu package:", error)
-    return { error: "Failed to create menu package" }
+    return { error: `Failed to create menu package: ${error.message}` }
   }
 
   revalidatePath("/manager/menu-packages")
@@ -53,26 +57,30 @@ export async function updateMenuPackage(
   id: string,
   data: {
     name: string
-    category: string
+    category_id: string // Changed from category to category_id
     description?: string
-    price_per_person: number
-    min_guests: number
-    items: string[]
+    bundle_price: number
+    serves_persons: number
+    items: Array<{ name: string; quantity: number; description?: string; is_signature?: boolean }> | string[]
+    photo?: string
     is_active: boolean
+    is_best_selling: boolean
   }
 ) {
   const supabase = await createClient()
 
   const { error } = await supabase
-    .from("event_menu_packages")
+    .from("menu_packages")
     .update({
       name: data.name,
-      category: data.category,
+      category_id: data.category_id, // Changed from category to category_id
       description: data.description || null,
-      price_per_person: data.price_per_person,
-      min_guests: data.min_guests,
+      bundle_price: data.bundle_price,
+      serves_persons: data.serves_persons,
       items: data.items || [],
+      photo: data.photo || null,
       is_active: data.is_active,
+      is_best_selling: data.is_best_selling,
     })
     .eq("id", id)
 
@@ -100,7 +108,7 @@ export async function deleteMenuPackage(id: string) {
   }
 
   const { error } = await supabase
-    .from("event_menu_packages")
+    .from("menu_packages")
     .delete()
     .eq("id", id)
 
@@ -117,7 +125,7 @@ export async function toggleMenuPackageStatus(id: string, is_active: boolean) {
   const supabase = await createClient()
 
   const { error } = await supabase
-    .from("event_menu_packages")
+    .from("menu_packages")
     .update({ is_active })
     .eq("id", id)
 
@@ -134,7 +142,7 @@ export async function getMenuPackageById(id: string) {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from("event_menu_packages")
+    .from("menu_packages")
     .select("*")
     .eq("id", id)
     .single()

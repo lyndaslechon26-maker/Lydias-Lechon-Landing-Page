@@ -13,7 +13,6 @@ import {
   Trash2,
   Upload,
   UtensilsCrossed,
-  Wine,
   X,
 } from "lucide-react"
 import { PageHeader } from "@/components/page-header"
@@ -73,7 +72,7 @@ type MenuItem = {
   image_url: string | null
   category_id: string | null
   is_available: boolean
-  is_alcoholic: boolean
+  is_best_selling: boolean
   prep_minutes: number | null
   created_at: string
   category?: Category | null
@@ -91,7 +90,7 @@ export function MenuManager({
   const [showCategoryManager, setShowCategoryManager] = useState(false)
   const [search, setSearch] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
-  const [availabilityFilter, setAvailabilityFilter] = useState<"all" | "available" | "unavailable">("all")
+  const [availabilityFilter, setAvailabilityFilter] = useState<"all" | "available" | "unavailable" | "best-selling">("all")
 
   // Debug: Log the props when component mounts
   useEffect(() => {
@@ -116,6 +115,7 @@ export function MenuManager({
       if (categoryFilter !== "all" && i.category_id !== categoryFilter) return false
       if (availabilityFilter === "available" && !i.is_available) return false
       if (availabilityFilter === "unavailable" && i.is_available) return false
+      if (availabilityFilter === "best-selling" && !i.is_best_selling) return false
       if (!search) return true
       const q = search.toLowerCase()
       return (
@@ -150,8 +150,8 @@ export function MenuManager({
   const stats = useMemo(() => {
     const total = items.length
     const available = items.filter((i) => i.is_available).length
-    const alcoholic = items.filter((i) => i.is_alcoholic).length
-    return { total, available, alcoholic, categories: categories.length }
+    const bestSelling = items.filter((i) => i.is_best_selling).length
+    return { total, available, bestSelling, categories: categories.length }
   }, [items, categories])
 
   const onToggleAvailability = (item: MenuItem) => {
@@ -223,7 +223,7 @@ export function MenuManager({
             </div>
             <Select
               value={availabilityFilter}
-              onValueChange={(v) => setAvailabilityFilter(v as "all" | "available" | "unavailable")}
+              onValueChange={(v) => setAvailabilityFilter(v as "all" | "available" | "unavailable" | "best-selling")}
             >
               <SelectTrigger className="h-9 w-40">
                 <SelectValue placeholder="Status" />
@@ -232,6 +232,7 @@ export function MenuManager({
                 <SelectItem value="all">All status</SelectItem>
                 <SelectItem value="available">Available</SelectItem>
                 <SelectItem value="unavailable">Unavailable</SelectItem>
+                <SelectItem value="best-selling">Best Seller</SelectItem>
               </SelectContent>
             </Select>
             {(search || categoryFilter !== "all" || availabilityFilter !== "all") && (
@@ -474,6 +475,7 @@ export function MenuManager({
         key={itemDialog.item?.id ?? "new-item"}
         open={itemDialog.open}
         item={itemDialog.item}
+        items={items}
         categories={categories}
         onClose={() => setItemDialog({ open: false, item: null })}
         onSaved={() => {
@@ -496,40 +498,64 @@ export function MenuManager({
 
       {/* Delete confirmations */}
       <Dialog open={!!deleteItemId} onOpenChange={(o) => !o && setDeleteItemId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete menu item?</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone. Items that have been used in past orders will be unlinked but historical data will remain.
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader className="space-y-3">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+              <Trash2 className="size-6 text-red-600 dark:text-red-500" />
+            </div>
+            <DialogTitle className="text-center text-xl">Delete Menu Item?</DialogTitle>
+            <DialogDescription className="text-center">
+              This action cannot be undone. This menu item will be permanently removed from your menu.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteItemId(null)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteItemId(null)}
+              disabled={pending}
+              className="w-full sm:w-auto sm:flex-1"
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={onDeleteItem} disabled={pending}>
-              <Trash2 className="mr-2 size-3.5" />
-              Delete
+            <Button
+              variant="destructive"
+              onClick={onDeleteItem}
+              disabled={pending}
+              className="w-full sm:w-auto sm:flex-1"
+            >
+              {pending ? "Deleting..." : "Delete Item"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!deleteCategoryId} onOpenChange={(o) => !o && setDeleteCategoryId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete category?</DialogTitle>
-            <DialogDescription>
-              Categories with existing menu items cannot be deleted. Move or remove items first.
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader className="space-y-3">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+              <Trash2 className="size-6 text-red-600 dark:text-red-500" />
+            </div>
+            <DialogTitle className="text-center text-xl">Delete Category?</DialogTitle>
+            <DialogDescription className="text-center">
+              Categories with existing menu items cannot be deleted. Please reassign or remove items first.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteCategoryId(null)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteCategoryId(null)}
+              disabled={pending}
+              className="w-full sm:w-auto sm:flex-1"
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={onDeleteCategory} disabled={pending}>
-              <Trash2 className="mr-2 size-3.5" />
-              Delete
+            <Button
+              variant="destructive"
+              onClick={onDeleteCategory}
+              disabled={pending}
+              className="w-full sm:w-auto sm:flex-1"
+            >
+              {pending ? "Deleting..." : "Delete Category"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -569,9 +595,9 @@ function ItemCard({
           </div>
         )}
         <div className="absolute right-2 top-2 flex gap-1">
-          {item.is_alcoholic && (
-            <Badge variant="secondary" className="bg-amber-500/90 text-white">
-              <Wine className="size-3" />
+          {item.is_best_selling && (
+            <Badge variant="secondary" className="bg-amber-500/90 text-white text-xs font-medium">
+              Best Seller
             </Badge>
           )}
           {item.is_available ? (
@@ -637,12 +663,14 @@ function ItemCard({
 function ItemFormDialog({
   open,
   item,
+  items,
   categories,
   onClose,
   onSaved,
 }: {
   open: boolean
   item: MenuItem | null
+  items: MenuItem[]
   categories: Category[]
   onClose: () => void
   onSaved: () => void
@@ -655,7 +683,12 @@ function ItemFormDialog({
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("none")
   const [isAvailable, setIsAvailable] = useState(true)
-  const [isAlcoholic, setIsAlcoholic] = useState(false)
+  const [isBestSelling, setIsBestSelling] = useState(false)
+
+  // Calculate current best selling count (excluding current item if editing)
+  const bestSellingCount = useMemo(() => {
+    return items.filter(i => i.is_best_selling && i.id !== item?.id).length
+  }, [items, item?.id])
 
   useEffect(() => {
     if (open) {
@@ -665,9 +698,9 @@ function ItemFormDialog({
       setError(null)
       setSelectedCategoryId(item?.category_id ?? "none")
       setIsAvailable(item?.is_available ?? true)
-      setIsAlcoholic(item?.is_alcoholic ?? false)
+      setIsBestSelling(item?.is_best_selling ?? false)
     }
-  }, [open, item?.id, item?.category_id, item?.is_available, item?.is_alcoholic])
+  }, [open, item?.id, item?.category_id, item?.is_available, item?.is_best_selling])
 
   useEffect(() => {
     return () => {
@@ -868,29 +901,86 @@ function ItemFormDialog({
               </div>
             </div>
 
-            <div className="sm:col-span-2 flex items-center gap-6 rounded-md border p-3">
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="is_available"
-                  checked={isAvailable}
-                  onCheckedChange={setIsAvailable}
-                />
-                <input type="hidden" name="is_available" value={isAvailable ? "on" : "off"} />
-                <Label htmlFor="is_available" className="cursor-pointer">
-                  Available for ordering
-                </Label>
-              </div>
-              <Separator orientation="vertical" className="h-6" />
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="is_alcoholic"
-                  checked={isAlcoholic}
-                  onCheckedChange={setIsAlcoholic}
-                />
-                <input type="hidden" name="is_alcoholic" value={isAlcoholic ? "on" : "off"} />
-                <Label htmlFor="is_alcoholic" className="cursor-pointer">
-                  Contains alcohol
-                </Label>
+            <div className="sm:col-span-2 rounded-md border p-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* Availability Status - Left Side */}
+                <div className="flex-1 flex items-center justify-between gap-4 p-3 rounded-md border">
+                  <div className="flex-1">
+                    <Label htmlFor="is_available" className="text-sm font-medium cursor-pointer block mb-1">
+                      Availability Status
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {isAvailable ? "Available for ordering" : "Currently unavailable"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isAvailable}
+                    onClick={() => setIsAvailable(!isAvailable)}
+                    className={`
+                      relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 flex-shrink-0
+                      ${isAvailable ? 'bg-emerald-500' : 'bg-rose-500'}
+                    `}
+                  >
+                    <span
+                      className={`
+                        inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                        ${isAvailable ? 'translate-x-6' : 'translate-x-1'}
+                      `}
+                    />
+                  </button>
+                  <input type="hidden" name="is_available" value={isAvailable ? "on" : "off"} />
+                </div>
+
+                {/* Best Selling - Right Side */}
+                <div className="flex-1 flex items-center justify-between gap-4 p-3 rounded-md bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Label htmlFor="is_best_selling" className="text-sm font-medium cursor-pointer">
+                        Best Seller
+                      </Label>
+                      <Badge variant="secondary" className="text-xs bg-amber-500/20 text-amber-700 dark:text-amber-400">
+                        {bestSellingCount}/5
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {isBestSelling 
+                        ? "Featured on landing page" 
+                        : bestSellingCount >= 5 
+                          ? "Limit reached"
+                          : "Mark to feature"
+                      }
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isBestSelling}
+                    onClick={() => {
+                      if (!isBestSelling && bestSellingCount >= 5) {
+                        setError("Maximum of 5 items can be marked as best selling. Unmark another item first.")
+                        return
+                      }
+                      setIsBestSelling(!isBestSelling)
+                      setError(null)
+                    }}
+                    disabled={!isBestSelling && bestSellingCount >= 5}
+                    className={`
+                      relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 flex-shrink-0
+                      ${isBestSelling ? 'bg-amber-500' : 'bg-gray-300'}
+                      ${!isBestSelling && bestSellingCount >= 5 ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}
+                  >
+                    <span
+                      className={`
+                        inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                        ${isBestSelling ? 'translate-x-6' : 'translate-x-1'}
+                      `}
+                    />
+                  </button>
+                  <input type="hidden" name="is_best_selling" value={isBestSelling ? "on" : "off"} />
+                </div>
               </div>
             </div>
           </div>

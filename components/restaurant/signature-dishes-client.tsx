@@ -109,7 +109,7 @@ export function SignatureDishesClient({ dishes }: SignatureDishesProps) {
                   
                   return (
                     <button
-                      key={`${dish.id}-${dishIndex}`}
+                      key={`dish-${dishIndex}-offset-${offset}`}
                       onClick={() => isCenter ? openModal(dish) : undefined}
                       disabled={!isCenter}
                       className={`group absolute rounded-3xl overflow-hidden bg-slate-900 transition-all duration-500 ${isCenter ? 'hover:scale-105 cursor-pointer' : 'cursor-default'} ${cardStyles} ${isCenter ? 'shadow-2xl shadow-amber-500/20 ring-2 ring-amber-500/30' : 'shadow-2xl'}`}

@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { updatePackage, getPackageById, deletePackage } from "@/app/actions/manager-packages"
 import type { EventType } from "@/lib/types/events"
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog"
 
 export default function EditPackagePage() {
   const router = useRouter()
@@ -28,6 +29,7 @@ export default function EditPackagePage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   
   const [pkg, setPkg] = useState({
     name: "",
@@ -160,10 +162,6 @@ export default function EditPackagePage() {
   }
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this package? This action cannot be undone.")) {
-      return
-    }
-
     setDeleting(true)
     setError(null)
 
@@ -172,6 +170,7 @@ export default function EditPackagePage() {
     if (result?.error) {
       setError(result.error)
       setDeleting(false)
+      setShowDeleteDialog(false)
     } else {
       router.push("/manager/packages")
     }
@@ -560,20 +559,11 @@ export default function EditPackagePage() {
         <div className="flex justify-between gap-4 pt-6 border-t">
           <Button
             variant="destructive"
-            onClick={handleDelete}
+            onClick={() => setShowDeleteDialog(true)}
             disabled={saving || deleting}
           >
-            {deleting ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
-                Deleting...
-              </>
-            ) : (
-              <>
-                <Trash2 className="size-4 mr-2" />
-                Delete Package
-              </>
-            )}
+            <Trash2 className="size-4 mr-2" />
+            Delete Package
           </Button>
 
           <div className="flex gap-4">
@@ -604,6 +594,17 @@ export default function EditPackagePage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleDelete}
+        title="Delete Package?"
+        description="This action cannot be undone. This package will be permanently removed from your system."
+        itemName={pkg.name}
+        isDeleting={deleting}
+      />
     </div>
   )
 }

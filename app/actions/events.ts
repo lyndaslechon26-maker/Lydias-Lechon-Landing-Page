@@ -261,7 +261,7 @@ export async function getMenuPackages(category?: string) {
   const supabase = await createClient()
 
   let query = supabase
-    .from("event_menu_packages")
+    .from("menu_packages")
     .select("*")
     .eq("is_active", true)
     .order("sort_order")
@@ -358,13 +358,13 @@ export async function calculateBookingPrice(input: {
   // 3. Food cost
   if (input.menu_package_id) {
     const { data: menu } = await supabase
-      .from("event_menu_packages")
-      .select("price_per_person")
+      .from("menu_packages")
+      .select("bundle_price")
       .eq("id", input.menu_package_id)
       .single()
 
     if (menu) {
-      food_cost = Number(menu.price_per_person) * input.num_guests
+      food_cost = Number(menu.bundle_price)
     }
   }
 
@@ -512,7 +512,7 @@ export async function createEventBooking(input: {
   let menu_package_name: string | null = null
   if (input.menu_package_id) {
     const { data: menu } = await supabase
-      .from("event_menu_packages")
+      .from("menu_packages")
       .select("name")
       .eq("id", input.menu_package_id)
       .single()
@@ -679,7 +679,7 @@ export async function getBooking(bookingId: string) {
       *,
       venue:event_venues(*),
       package:event_packages(*),
-      menu_package:event_menu_packages(*),
+      menu_package:menu_packages(*),
       addons:event_booking_addons(*, addon:event_addons(*)),
       payments:event_payments(*)
     `)

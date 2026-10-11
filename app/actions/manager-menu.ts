@@ -148,7 +148,7 @@ export async function updateMenuItem(id: string, formData: FormData) {
   const base_price = parseFloat(formData.get("base_price") as string)
   const category_id = formData.get("category_id") as string | null
   const is_available = formData.get("is_available") === "on"
-  const is_alcoholic = formData.get("is_alcoholic") === "on"
+  const is_best_selling = formData.get("is_best_selling") === "on"
   const imageFile = formData.get("image_file") as File | null
   const existingImageUrl = formData.get("image_url") as string
 
@@ -158,7 +158,7 @@ export async function updateMenuItem(id: string, formData: FormData) {
     base_price,
     category_id,
     is_available,
-    is_alcoholic,
+    is_best_selling,
     existingImageUrl,
     hasImageFile: !!imageFile && imageFile.size > 0,
   })
@@ -191,7 +191,7 @@ export async function updateMenuItem(id: string, formData: FormData) {
       base_price,
       category_id: category_id === "none" ? null : category_id,
       is_available,
-      is_alcoholic,
+      is_best_selling,
       image_url,
     })
     .eq("id", id)
@@ -243,4 +243,20 @@ export async function toggleMenuItemAvailability(id: string, is_available: boole
 
   revalidatePath("/manager/menu")
   return { success: true }
+}
+
+export async function getBestSellingCount() {
+  const supabase = await createClient()
+
+  const { count, error } = await supabase
+    .from("menu_items")
+    .select("*", { count: "exact", head: true })
+    .eq("is_best_selling", true)
+
+  if (error) {
+    console.error("Failed to get best selling count:", error)
+    return { count: 0 }
+  }
+
+  return { count: count || 0 }
 }
