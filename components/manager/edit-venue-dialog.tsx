@@ -4,8 +4,6 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -487,19 +485,36 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
                   )}
                 </div>
 
-                {/* Settings */}
+                {/* Venue Status */}
                 <div className="space-y-4">
-                  <h3 className="font-semibold">Settings</h3>
+                  <h3 className="font-semibold">Active Status</h3>
                   
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id="is_active"
-                      checked={venue.is_active}
-                      onCheckedChange={(checked) => setVenue({...venue, is_active: checked})}
-                    />
-                    <Label htmlFor="is_active" className="cursor-pointer">
-                      Venue is active and available for booking
-                    </Label>
+                  <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/30">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Visible to customers</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {venue.is_active ? 'This venue is available for booking' : 'This venue is hidden from customers'}
+                      </p>
+                    </div>
+                    
+                    {/* Custom Toggle Switch */}
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={venue.is_active}
+                      onClick={() => setVenue({...venue, is_active: !venue.is_active})}
+                      className={`
+                        relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2
+                        ${venue.is_active ? 'bg-orange-500' : 'bg-gray-300'}
+                      `}
+                    >
+                      <span
+                        className={`
+                          inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                          ${venue.is_active ? 'translate-x-6' : 'translate-x-1'}
+                        `}
+                      />
+                    </button>
                   </div>
                 </div>
               </div>
