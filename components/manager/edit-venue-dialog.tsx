@@ -27,6 +27,7 @@ import {
 import { updateVenue, getVenueById, deleteVenue, createVenue } from "@/app/actions/manager-venues"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog"
+import { compressImageToBase64, formatFileSize, COMPRESSION_PRESETS } from "@/lib/image-compression"
 
 interface EditVenueDialogProps {
   open: boolean
@@ -174,22 +175,47 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
       return
     }
 
-    setUploadingPhoto(true)
     const file = files[0]
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError("Please select a valid image file")
+      return
+    }
+
+    // Validate file size (max 10MB before compression)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      setError("Image size must be less than 10MB")
+      return
+    }
+
+    setUploadingPhoto(true)
+    setError(null)
 
     try {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setVenue({...venue, photos: [...venue.photos, reader.result as string]})
-        setUploadingPhoto(false)
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ''
-        }
-      }
-      reader.readAsDataURL(file)
-    } catch (error) {
-      setError("Failed to upload photo")
+      const originalSize = file.size
+      
+      // Compress image using gallery preset (higher quality for venue photos)
+      const compressedBase64 = await compressImageToBase64(file, COMPRESSION_PRESETS.gallery)
+      
+      // Calculate compressed size (rough estimate from base64 length)
+      const compressedSize = Math.round((compressedBase64.length * 3) / 4)
+      
+      // Show compression info in console
+      console.log(`Venue photo compressed: ${formatFileSize(originalSize)} → ${formatFileSize(compressedSize)} (${Math.round((compressedSize / originalSize) * 100)}% of original)`)
+      
+      setVenue({...venue, photos: [...venue.photos, compressedBase64]})
       setUploadingPhoto(false)
+      
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    } catch (error) {
+      console.error('Compression error:', error)
+      setError("Failed to compress and upload photo")
+      setUploadingPhoto(false)
+      
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
@@ -312,7 +338,7 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
                       step="1000"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Current: ₱{venue.base_rate.toLocaleString()}
+                      Current: ₱{(venue.base_rate || 0).toLocaleString()}
                     </p>
                   </div>
                 </div>
