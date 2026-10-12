@@ -208,8 +208,8 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
 
         const originalSize = file.size
         
-        // Compress image using gallery preset (higher quality for venue photos)
-        const compressedBase64 = await compressImageToBase64(file, COMPRESSION_PRESETS.gallery)
+        // Compress image using venue preset (optimized for multiple uploads)
+        const compressedBase64 = await compressImageToBase64(file, COMPRESSION_PRESETS.venue)
         
         // Calculate compressed size (rough estimate from base64 length)
         const compressedSize = Math.round((compressedBase64.length * 3) / 4)

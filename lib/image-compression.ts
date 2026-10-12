@@ -163,6 +163,14 @@ export const COMPRESSION_PRESETS = {
     format: 'image/jpeg' as const
   },
   
+  // For venue images - optimized for multiple uploads
+  venue: {
+    maxWidth: 1000,
+    maxHeight: 750,
+    quality: 0.75,
+    format: 'image/jpeg' as const
+  },
+  
   // For thumbnails - smaller size
   thumbnail: {
     maxWidth: 600,
