@@ -167,7 +167,10 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
     const files = e.target.files
     if (!files || files.length === 0) return
 
-    if (venue.photos.length >= 5) {
+    // Calculate how many more photos can be added
+    const remainingSlots = 5 - venue.photos.length
+    
+    if (remainingSlots === 0) {
       setError("Maximum 5 photos allowed per venue")
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
@@ -175,37 +178,52 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
       return
     }
 
-    const file = files[0]
+    // Limit files to remaining slots
+    const filesToUpload = Array.from(files).slice(0, remainingSlots)
     
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError("Please select a valid image file")
-      return
-    }
-
-    // Validate file size (max 10MB before compression)
-    const maxSize = 10 * 1024 * 1024 // 10MB
-    if (file.size > maxSize) {
-      setError("Image size must be less than 10MB")
-      return
+    if (files.length > remainingSlots) {
+      setError(`Only ${remainingSlots} more photo(s) can be added (maximum 5 total)`)
     }
 
     setUploadingPhoto(true)
     setError(null)
 
     try {
-      const originalSize = file.size
+      const compressedPhotos: string[] = []
       
-      // Compress image using gallery preset (higher quality for venue photos)
-      const compressedBase64 = await compressImageToBase64(file, COMPRESSION_PRESETS.gallery)
+      // Process all files
+      for (const file of filesToUpload) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          console.warn(`Skipping ${file.name}: not an image file`)
+          continue
+        }
+
+        // Validate file size (max 10MB before compression)
+        const maxSize = 10 * 1024 * 1024 // 10MB
+        if (file.size > maxSize) {
+          console.warn(`Skipping ${file.name}: file size exceeds 10MB`)
+          continue
+        }
+
+        const originalSize = file.size
+        
+        // Compress image using gallery preset (higher quality for venue photos)
+        const compressedBase64 = await compressImageToBase64(file, COMPRESSION_PRESETS.gallery)
+        
+        // Calculate compressed size (rough estimate from base64 length)
+        const compressedSize = Math.round((compressedBase64.length * 3) / 4)
+        
+        // Show compression info in console
+        console.log(`Venue photo compressed: ${file.name} - ${formatFileSize(originalSize)} → ${formatFileSize(compressedSize)} (${Math.round((compressedSize / originalSize) * 100)}% of original)`)
+        
+        compressedPhotos.push(compressedBase64)
+      }
       
-      // Calculate compressed size (rough estimate from base64 length)
-      const compressedSize = Math.round((compressedBase64.length * 3) / 4)
+      if (compressedPhotos.length > 0) {
+        setVenue({...venue, photos: [...venue.photos, ...compressedPhotos]})
+      }
       
-      // Show compression info in console
-      console.log(`Venue photo compressed: ${formatFileSize(originalSize)} → ${formatFileSize(compressedSize)} (${Math.round((compressedSize / originalSize) * 100)}% of original)`)
-      
-      setVenue({...venue, photos: [...venue.photos, compressedBase64]})
       setUploadingPhoto(false)
       
       if (fileInputRef.current) {
@@ -213,7 +231,7 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
       }
     } catch (error) {
       console.error('Compression error:', error)
-      setError("Failed to compress and upload photo")
+      setError("Failed to compress and upload photos")
       setUploadingPhoto(false)
       
       if (fileInputRef.current) {
@@ -360,6 +378,7 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
                         ref={fileInputRef}
                         type="file"
                         accept="image/*"
+                        multiple
                         onChange={handleFileSelect}
                         className="hidden"
                         disabled={uploadingPhoto || venue.photos.length >= 5}
@@ -384,12 +403,12 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
                         ) : (
                           <>
                             <Upload className="size-4 mr-2" />
-                            Upload Photo ({venue.photos.length}/5)
+                            Upload Photos ({venue.photos.length}/5)
                           </>
                         )}
                       </Button>
                       <p className="text-xs text-muted-foreground mt-2">
-                        Supported: JPG, PNG, WebP (Max 5MB, up to 5 photos)
+                        Select multiple photos (up to {5 - venue.photos.length} more). Max 10MB each, JPG/PNG/WebP
                       </p>
                     </div>
 
@@ -430,7 +449,7 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
                           size="sm"
                         >
                           <Upload className="size-4 mr-2" />
-                          Upload First Photo
+                          Upload Photos (up to 5)
                         </Button>
                       </div>
                     )}
