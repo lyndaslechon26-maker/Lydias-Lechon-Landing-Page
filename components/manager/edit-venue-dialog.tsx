@@ -305,17 +305,6 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
                       rows={4}
                     />
                   </div>
-
-                  <div className="flex items-center gap-2 pt-3 border-t">
-                    <Switch
-                      id="is_active"
-                      checked={venue.is_active}
-                      onCheckedChange={(checked) => setVenue({...venue, is_active: checked})}
-                    />
-                    <Label htmlFor="is_active" className="cursor-pointer">
-                      Venue is active and available for booking
-                    </Label>
-                  </div>
                 </div>
 
                 {/* Capacity & Pricing */}
@@ -496,6 +485,22 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* Settings */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Settings</h3>
+                  
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="is_active"
+                      checked={venue.is_active}
+                      onCheckedChange={(checked) => setVenue({...venue, is_active: checked})}
+                    />
+                    <Label htmlFor="is_active" className="cursor-pointer">
+                      Venue is active and available for booking
+                    </Label>
+                  </div>
                 </div>
               </div>
             </ScrollArea>
