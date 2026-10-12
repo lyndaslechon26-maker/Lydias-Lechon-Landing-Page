@@ -48,6 +48,7 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
     capacity_min: 50,
     capacity_max: 200,
     base_rate: 50000,
+    duration: "Full Day",
     photos: [] as string[],
     amenities: [] as string[],
     is_active: true,
@@ -68,6 +69,7 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
         capacity_min: 50,
         capacity_max: 200,
         base_rate: 50000,
+        duration: "Full Day",
         photos: [],
         amenities: [],
         is_active: true,
@@ -97,6 +99,7 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
       capacity_min: data.capacity_min,
       capacity_max: data.capacity_max,
       base_rate: data.base_rate,
+      duration: data.duration || "Full Day",
       photos: data.photos || [],
       amenities: data.amenities || [],
       is_active: data.is_active,
@@ -249,7 +252,7 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogOverlay className="bg-gradient-to-br from-black/70 via-black/50 to-black/70 backdrop-blur-md" />
-        <DialogContent className="max-w-4xl max-h-[90vh] bg-white dark:bg-zinc-900">
+        <DialogContent className="max-w-4xl max-h-[95vh] bg-white dark:bg-zinc-900">
           <DialogHeader>
             <DialogTitle>{venueId ? 'Edit Venue' : 'Create Venue'}</DialogTitle>
             <DialogDescription>{venueId ? 'Update venue information' : 'Create a new event venue'}</DialogDescription>
@@ -260,7 +263,7 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
               <Loader2 className="size-8 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <ScrollArea className="max-h-[calc(90vh-180px)] pr-4">
+            <ScrollArea className="max-h-[calc(95vh-200px)] pr-4">
               <div className="space-y-6">
                 {error && (
                   <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
@@ -309,9 +312,9 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
                 <div className="space-y-4">
                   <h3 className="font-semibold">Capacity & Pricing</h3>
 
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Minimum Capacity <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium mb-2">Min Capacity <span className="text-red-500">*</span></label>
                       <Input
                         type="number"
                         value={venue.capacity_min}
@@ -321,7 +324,7 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-2">Maximum Capacity <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium mb-2">Max Capacity <span className="text-red-500">*</span></label>
                       <Input
                         type="number"
                         value={venue.capacity_max}
@@ -329,21 +332,42 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
                         min="1"
                       />
                     </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Duration <span className="text-red-500">*</span></label>
+                      <select
+                        value={venue.duration}
+                        onChange={(e) => setVenue({...venue, duration: e.target.value})}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                          backgroundPosition: 'right 0.5rem center',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundSize: '1.5em 1.5em',
+                          paddingRight: '2.5rem'
+                        }}
+                      >
+                        <option value="Hourly">Hourly</option>
+                        <option value="Half Day">Half Day</option>
+                        <option value="Full Day">Full Day</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Base Rate (₱) <span className="text-red-500">*</span></label>
+                      <Input
+                        type="number"
+                        value={venue.base_rate}
+                        onChange={(e) => setVenue({...venue, base_rate: Number(e.target.value)})}
+                        min="0"
+                        step="1000"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Base Rate (₱) <span className="text-red-500">*</span></label>
-                    <Input
-                      type="number"
-                      value={venue.base_rate}
-                      onChange={(e) => setVenue({...venue, base_rate: Number(e.target.value)})}
-                      min="0"
-                      step="1000"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Current: ₱{(venue.base_rate || 0).toLocaleString()}
-                    </p>
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Current rate: ₱{(venue.base_rate || 0).toLocaleString()} per {venue.duration.toLowerCase()}
+                  </p>
                 </div>
 
                 {/* Photos */}
@@ -521,20 +545,33 @@ export function EditVenueDialog({ open, onOpenChange, venueId, onSuccess }: Edit
             </ScrollArea>
           )}
 
-          <DialogFooter className="flex justify-between">
+          <DialogFooter className="flex justify-between items-center">
+            {/* Delete Button - Left Side (Only in Edit Mode) */}
             {venueId ? (
               <Button
                 variant="destructive"
                 onClick={() => setShowDeleteDialog(true)}
                 disabled={saving || deleting}
+                className="mr-auto"
               >
-                <Trash2 className="size-4 mr-2" />
-                Delete
+                {deleting ? (
+                  <>
+                    <Loader2 className="size-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="size-4 mr-2" />
+                    Delete Venue
+                  </>
+                )}
               </Button>
             ) : (
+              // Empty div to maintain spacing in create mode
               <div />
             )}
 
+            {/* Cancel & Save Buttons - Right Side */}
             <div className="flex gap-2">
               <Button
                 variant="outline"

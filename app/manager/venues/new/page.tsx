@@ -29,6 +29,7 @@ export default function NewVenuePage() {
     capacity_min: 50,
     capacity_max: 200,
     base_rate: 50000,
+    duration: "Full Day",
     photos: [] as string[],
     amenities: [] as string[],
     is_active: true,

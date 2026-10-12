@@ -14,6 +14,7 @@ export async function createVenue(data: {
   capacity_min: number
   capacity_max: number
   base_rate: number
+  duration: string
   photos?: string[]
   amenities?: string[]
   is_active: boolean
@@ -29,6 +30,7 @@ export async function createVenue(data: {
       capacity_min: data.capacity_min,
       capacity_max: data.capacity_max,
       base_rate: data.base_rate,
+      duration: data.duration,
       photos: data.photos || [],
       amenities: data.amenities || [],
       is_active: data.is_active,
@@ -52,6 +54,7 @@ export async function updateVenue(
     capacity_min: number
     capacity_max: number
     base_rate: number
+    duration: string
     photos?: string[]
     amenities?: string[]
     is_active: boolean
@@ -68,6 +71,7 @@ export async function updateVenue(
       capacity_min: data.capacity_min,
       capacity_max: data.capacity_max,
       base_rate: data.base_rate,
+      duration: data.duration,
       photos: data.photos || [],
       amenities: data.amenities || [],
       is_active: data.is_active,

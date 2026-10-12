@@ -21,15 +21,15 @@ import { FadeUp } from '@/components/ui/scroll-animations'
 interface EventSpace {
   id: string
   name: string
-  capacity?: number
-  location?: string
+  location: string
   description?: string
-  image_url?: string
-  amenities?: string[]
-  features?: string[]
+  capacity_min: number
+  capacity_max: number
+  base_rate: number
+  duration: string
+  photos: string[]
+  amenities: string[]
   is_active: boolean
-  price_per_hour?: number
-  price_per_day?: number
 }
 
 export function EventsPlace() {
@@ -44,64 +44,65 @@ export function EventsPlace() {
       const { data, error } = await supabase
         .from('event_venues')
         .select('*')
-        .eq('is_available', true)
-        .order('capacity', { ascending: false })
+        .eq('is_active', true)
+        .order('capacity_max', { ascending: false })
 
       if (data && !error && data.length > 0) {
-        setEventSpaces(data.map(venue => ({
-          ...venue,
-          price_per_day: venue.price_per_hour ? venue.price_per_hour * 8 : 15000
-        })))
+        setEventSpaces(data)
       } else {
-        // Fallback data with pricing
+        // Fallback data matching new schema
         setEventSpaces([
           {
             id: '1',
             name: 'Grand Ballroom',
-            capacity: 200,
             location: 'Main Building, Ground Floor',
             description: 'Our most spacious and elegant venue, perfect for grand weddings, corporate galas, and large celebrations. Features high ceilings, crystal chandeliers, and a dedicated stage area.',
-            image_url: 'https://images.unsplash.com/photo-1519167758481-83f29da8a77a?w=1200&q=80',
+            capacity_min: 100,
+            capacity_max: 200,
+            base_rate: 25000,
+            duration: 'Full Day',
+            photos: ['https://images.unsplash.com/photo-1519167758481-83f29da8a77a?w=1200&q=80'],
             amenities: ['Air-conditioned', 'Professional sound system', '4K LED projector', 'Stage with lighting', 'Bridal room', 'Full catering kitchen', 'Elegant chandeliers', 'Dance floor'],
-            features: ['Air-conditioned', 'Sound system', 'LED projector', 'Stage'],
-            is_active: true,
-            price_per_day: 25000
+            is_active: true
           },
           {
             id: '2',
             name: 'Garden Pavilion',
-            capacity: 150,
             location: 'Outdoor Garden Area',
             description: 'Beautiful al fresco venue surrounded by lush greenery and natural ambiance. Ideal for garden weddings, intimate celebrations, and daytime events.',
-            image_url: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1200&q=80',
+            capacity_min: 75,
+            capacity_max: 150,
+            base_rate: 18000,
+            duration: 'Full Day',
+            photos: ['https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1200&q=80'],
             amenities: ['Garden setting', 'String lights & lanterns', 'Wooden tables & chairs', 'Open-air pavilion', 'Photo wall backdrops', 'Garden bar counter', 'Acoustic sound system'],
-            features: ['Garden setting', 'String lights', 'Wooden tables'],
-            is_active: true,
-            price_per_day: 18000
+            is_active: true
           },
           {
             id: '3',
             name: 'Rooftop Deck',
-            capacity: 100,
             location: 'Rooftop Level',
             description: 'Modern and stylish rooftop venue with stunning city skyline views. Perfect for cocktail parties, corporate events, and trendy celebrations.',
-            image_url: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?w=1200&q=80',
+            capacity_min: 50,
+            capacity_max: 100,
+            base_rate: 22000,
+            duration: 'Half Day',
+            photos: ['https://images.unsplash.com/photo-1478147427282-58a87a120781?w=1200&q=80'],
             amenities: ['City skyline view', 'Retractable awning', 'Modern lounge furniture', 'Bar counter with stools', 'LED mood lighting', 'Bluetooth sound system', 'Heaters for cooler evenings'],
-            features: ['City view', 'Retractable roof', 'Modern fixtures'],
-            is_active: true,
-            price_per_day: 22000
+            is_active: true
           },
           {
             id: '4',
             name: 'Function Room A',
-            capacity: 80,
             location: 'Second Floor',
             description: 'Versatile and intimate space perfect for birthday parties, small gatherings, corporate meetings, and family celebrations. Fully air-conditioned with flexible setup options.',
-            image_url: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&q=80',
+            capacity_min: 40,
+            capacity_max: 80,
+            base_rate: 12000,
+            duration: 'Hourly',
+            photos: ['https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&q=80'],
             amenities: ['Air-conditioned', 'Smart TV with HDMI', 'Quality sound system', 'Flexible table arrangements', 'Free WiFi', 'Whiteboard & projector screen', 'Private entrance'],
-            features: ['Air-conditioned', 'TV screen', 'Mini sound system'],
-            is_active: true,
-            price_per_day: 12000
+            is_active: true
           }
         ])
       }
@@ -126,20 +127,18 @@ export function EventsPlace() {
 
   const currentSpace = eventSpaces[currentIndex]
   
-  // Parse amenities from JSON or array
-  const amenities = Array.isArray(currentSpace.amenities) 
-    ? currentSpace.amenities 
-    : currentSpace.amenities 
-      ? JSON.parse(currentSpace.amenities as any)
-      : []
+  // Amenities are already an array from database
+  const amenities = currentSpace.amenities || []
 
-  // Generate multiple images (for gallery effect - using variations of same image)
-  const venueImages = [
-    currentSpace.image_url,
-    currentSpace.image_url + '&sat=-20',
-    currentSpace.image_url + '&brightness=10',
-    currentSpace.image_url + '&contrast=10'
-  ]
+  // Get venue images from photos array, fallback to placeholder
+  const venueImages = currentSpace.photos && currentSpace.photos.length > 0
+    ? currentSpace.photos
+    : ['https://images.unsplash.com/photo-1519167758481-83f29da8a77a?w=1200&q=80']
+  
+  // Ensure we have at least 4 images for gallery (duplicate if needed)
+  while (venueImages.length < 4) {
+    venueImages.push(venueImages[0])
+  }
 
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev === eventSpaces.length - 1 ? 0 : prev + 1))
@@ -176,7 +175,7 @@ export function EventsPlace() {
             {/* Main Large Image */}
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl group">
               <img 
-                src={venueImages[selectedImageIndex] || currentSpace.image_url}
+                src={venueImages[selectedImageIndex]}
                 alt={currentSpace.name}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
@@ -233,25 +232,25 @@ export function EventsPlace() {
               </button>
             </div>
 
-            {/* Thumbnail Gallery */}
+            {/* Thumbnail Gallery - Show only 4 thumbnails (exclude currently selected) */}
             <div className="grid grid-cols-4 gap-3">
-              {venueImages.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImageIndex(index)}
-                  className={`relative aspect-[4/3] rounded-lg overflow-hidden transition-all ${
-                    selectedImageIndex === index 
-                      ? 'ring-4 ring-amber-500 scale-95' 
-                      : 'opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  <img 
-                    src={image}
-                    alt={`${currentSpace.name} view ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
+              {venueImages
+                .map((image, originalIndex) => ({ image, originalIndex }))
+                .filter(({ originalIndex }) => originalIndex !== selectedImageIndex)
+                .slice(0, 4)
+                .map(({ image, originalIndex }) => (
+                  <button
+                    key={originalIndex}
+                    onClick={() => setSelectedImageIndex(originalIndex)}
+                    className="relative aspect-[4/3] rounded-lg overflow-hidden transition-all opacity-70 hover:opacity-100 hover:scale-105"
+                  >
+                    <img 
+                      src={image}
+                      alt={`${currentSpace.name} view ${originalIndex + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
             </div>
           </div>
 
@@ -280,14 +279,14 @@ export function EventsPlace() {
               <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200/50 dark:border-amber-800/30">
                 <Users className="size-5 text-amber-600 mb-2" />
                 <p className="text-sm text-muted-foreground mb-1">Capacity</p>
-                <p className="text-2xl font-bold">{currentSpace.capacity}</p>
-                <p className="text-xs text-muted-foreground">guests</p>
+                <p className="text-2xl font-bold">{currentSpace.capacity_max}</p>
+                <p className="text-xs text-muted-foreground">max guests</p>
               </div>
               <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border border-blue-200/50 dark:border-blue-800/30">
                 <Clock className="size-5 text-blue-600 mb-2" />
                 <p className="text-sm text-muted-foreground mb-1">Duration</p>
-                <p className="text-2xl font-bold">Full</p>
-                <p className="text-xs text-muted-foreground">day event</p>
+                <p className="text-2xl font-bold">{currentSpace.duration}</p>
+                <p className="text-xs text-muted-foreground">booking</p>
               </div>
             </div>
 
@@ -303,7 +302,7 @@ export function EventsPlace() {
               <div className="flex items-baseline justify-between mb-3">
                 <div>
                   <p className="text-sm text-slate-300 mb-1">Starting from</p>
-                  <p className="text-4xl font-bold">₱{currentSpace.price_per_day?.toLocaleString()}</p>
+                  <p className="text-4xl font-bold">₱{currentSpace.base_rate.toLocaleString()}</p>
                   <p className="text-sm text-slate-400">per day</p>
                 </div>
                 <Calendar className="size-8 text-amber-500 opacity-50" />
