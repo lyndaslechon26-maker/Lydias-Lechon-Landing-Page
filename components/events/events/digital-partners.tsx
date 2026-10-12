@@ -23,6 +23,21 @@ export function DigitalPartners() {
       name: "GCash",
       logo: "/gcash1.png",
       alt: "GCash"
+    },
+    {
+      name: "Bank Transfer",
+      logo: "/BankTransfer.png",
+      alt: "Bank Transfer"
+    },
+    {
+      name: "Credit Card",
+      logo: "/CreditCard.png",
+      alt: "Credit Card"
+    },
+    {
+      name: "QRPH",
+      logo: "/QRPH.png",
+      alt: "QRPH"
     }
   ]
 

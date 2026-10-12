@@ -32,6 +32,27 @@ export function DigitalPartners() {
       icon: CreditCard,
       alt: "GCash",
       color: "from-blue-600 to-indigo-600"
+    },
+    {
+      name: "Bank Transfer",
+      logo: "/BankTransfer.png",
+      icon: Wallet,
+      alt: "Bank Transfer",
+      color: "from-orange-500 to-red-600"
+    },
+    {
+      name: "Credit Card",
+      logo: "/CreditCard.png",
+      icon: CreditCard,
+      alt: "Credit Card",
+      color: "from-purple-500 to-pink-600"
+    },
+    {
+      name: "QRPH",
+      logo: "/QRPH.png",
+      icon: Wallet,
+      alt: "QRPH",
+      color: "from-teal-500 to-cyan-600"
     }
   ]
 
@@ -106,7 +127,7 @@ export function DigitalPartners() {
         </div>
 
         {/* Partners Logos Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 items-center justify-items-center max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-6 sm:gap-8 items-center justify-items-center max-w-7xl mx-auto">
           {partners.map((partner, index) => (
             <div 
               key={index}

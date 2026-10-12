@@ -361,20 +361,6 @@ export function EventsPlace() {
           ))}
         </div>
 
-        {/* View All Button */}
-        <div className="text-center mt-12">
-          <Link href="/events/venues">
-            <Button 
-              size="lg"
-              variant="outline"
-              className="border-2 border-amber-600 text-amber-600 hover:bg-amber-600 hover:text-white font-semibold px-8"
-            >
-              View All Venues & Packages
-              <ChevronRight className="size-5 ml-2" />
-            </Button>
-          </Link>
-        </div>
-
       </div>
     </section>
   )
