@@ -70,17 +70,13 @@ export default function SignupPage() {
       })
 
       if (result.error) {
-        if (result.error.includes("already registered")) {
-          setError("This email is already registered. Please login instead.")
-        } else if (result.error.includes("email")) {
-          setError("Please enter a valid email address")
-        } else {
-          setError(result.error)
-        }
+        // Show the actual error from Supabase
+        setError(result.error)
       } else {
         setSuccess(true)
       }
     } catch (err) {
+      console.error('Signup error:', err)
       setError("An unexpected error occurred. Please try again.")
     } finally {
       setLoading(false)
@@ -104,8 +100,8 @@ export default function SignupPage() {
             </div>
             <h1 className="text-3xl font-bold mb-4">Account Created!</h1>
             <p className="text-muted-foreground mb-6 leading-relaxed">
-              We've sent a verification email to <strong>{formData.email}</strong>.
-              Please check your inbox and click the verification link to activate your account.
+              Your account <strong>{formData.email}</strong> has been successfully created.
+              You can now log in and start booking events!
             </p>
             <div className="space-y-3">
               <Link href="/events/login">
@@ -119,12 +115,7 @@ export default function SignupPage() {
                 </Button>
               </Link>
             </div>
-            <p className="text-sm text-muted-foreground mt-6">
-              Didn't receive the email?{" "}
-              <button className="text-amber-600 hover:text-amber-700 font-medium">
-                Resend verification
-              </button>
-            </p>
+
           </div>
         </div>
       </div>

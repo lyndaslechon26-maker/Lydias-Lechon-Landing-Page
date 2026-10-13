@@ -252,7 +252,7 @@ export function FoodCategories() {
                 From our signature lechon to convenient bento boxes and family meal packages—enjoy authentic Filipino flavors perfect for any gathering, celebration, or family meal.
               </p>
               <div className="flex justify-end">
-                <Link href="/events/menu">
+                <Link href="/events/menu-packages">
                   <Button 
                     size="lg"
                     className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 px-7 py-5 rounded-full shadow-lg"

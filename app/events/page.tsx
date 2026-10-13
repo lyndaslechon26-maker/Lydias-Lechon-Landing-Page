@@ -23,6 +23,7 @@ import { ValueSection } from "@/components/restaurant/value-section"
 import { WaveDivider } from "@/components/ui/wave-divider"
 import { FadeUp, ScaleFade } from "@/components/ui/scroll-animations"
 import { GoldDivider } from "@/components/ui/gold-divider"
+import { CartWrapper } from "@/components/cart/cart-wrapper"
 
 export const metadata = {
   title: "Lumière Restaurant - Fine Dining Experience in Manila",
@@ -95,6 +96,8 @@ export default async function EventsLandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
 
+    <CartWrapper />
+    
     <div className="flex flex-col">
       {/* Hero Section - Content on Left Side */}
       <section className="relative min-h-screen flex items-center overflow-hidden">

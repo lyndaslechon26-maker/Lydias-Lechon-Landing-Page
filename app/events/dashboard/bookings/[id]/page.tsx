@@ -75,7 +75,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
   const canUploadPayment = booking.status !== "cancelled" && booking.payment_status !== "paid"
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-20">
       {/* Header */}
       <section className="py-6 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-amber-950/20 dark:via-orange-950/20 dark:to-rose-950/20 border-b">
         <div className="container mx-auto px-4">

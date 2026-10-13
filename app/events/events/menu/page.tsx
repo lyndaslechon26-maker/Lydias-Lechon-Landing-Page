@@ -35,7 +35,7 @@ function MenuContent() {
         .from("menu_items")
         .select(`
           *,
-          categories (
+          food_categories (
             id,
             name
           )
@@ -52,7 +52,7 @@ function MenuContent() {
         setMenuItems(data)
         
         // Extract unique categories
-        const uniqueCategories = [...new Set(data.map(item => item.categories?.name).filter(Boolean))] as string[]
+        const uniqueCategories = [...new Set(data.map(item => item.food_categories?.name).filter(Boolean))] as string[]
         setCategories(uniqueCategories)
         
         // Set initial category from URL if provided
@@ -70,7 +70,7 @@ function MenuContent() {
   // Filter items by selected category
   const filteredItems = selectedCategory === "all" 
     ? menuItems 
-    : menuItems.filter(item => item.categories?.name === selectedCategory)
+    : menuItems.filter(item => item.food_categories?.name === selectedCategory)
 
   return (
     <div className="min-h-screen bg-background">
@@ -183,7 +183,7 @@ function MenuContent() {
 
                             {/* Price */}
                             <div className="mb-0">
-                              <div className="text-2xl font-bold">₱{Number(item.price).toLocaleString()}</div>
+                              <div className="text-2xl font-bold">₱{Number(item.base_price).toLocaleString()}</div>
                             </div>
                           </div>
                         </div>
@@ -194,7 +194,7 @@ function MenuContent() {
                             {item.name}
                           </h3>
                           <p className="text-white/70 text-xs uppercase tracking-wide">
-                            {item.categories?.name || "Other"}
+                            {item.food_categories?.name || "Other"}
                           </p>
                         </div>
 
@@ -263,7 +263,7 @@ function MenuContent() {
               <div className="w-full md:w-2/5 p-6 sm:p-8 overflow-y-auto max-h-[50vh] md:max-h-full">
                 {/* Category Badge */}
                 <div className="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-100 text-xs font-semibold mb-4 uppercase tracking-wide">
-                  {selectedItem.categories?.name || "Other"}
+                  {selectedItem.food_categories?.name || "Other"}
                 </div>
 
                 {/* Item Name */}
@@ -282,7 +282,7 @@ function MenuContent() {
                 <div className="mb-6 pb-6 border-b border-slate-200 dark:border-slate-700">
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-amber-600 dark:text-amber-500">
-                      ₱{Number(selectedItem.price).toLocaleString()}
+                      ₱{Number(selectedItem.base_price).toLocaleString()}
                     </span>
                   </div>
                 </div>

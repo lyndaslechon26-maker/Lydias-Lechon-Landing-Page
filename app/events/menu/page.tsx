@@ -2,10 +2,13 @@
 
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
-import { UtensilsCrossed, ChevronRight, X } from "lucide-react"
+import { UtensilsCrossed, ChevronRight, X, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
+import { useCart } from "@/contexts/cart-context"
+import { FloatingCartButton } from "@/components/cart/floating-cart-button"
+import { CartModal } from "@/components/cart/cart-modal"
 
 // Category icons and colors
 const categoryConfig: Record<string, { color: string; gradient: string }> = {
@@ -20,6 +23,7 @@ const categoryConfig: Record<string, { color: string; gradient: string }> = {
 function MenuContent() {
   const searchParams = useSearchParams()
   const categoryFromUrl = searchParams.get('category')
+  const { addToCart, checkAuth } = useCart()
   
   const [menuItems, setMenuItems] = useState<any[]>([])
   const [categories, setCategories] = useState<string[]>([])
@@ -35,7 +39,7 @@ function MenuContent() {
         .from("menu_items")
         .select(`
           *,
-          categories (
+          food_categories (
             id,
             name
           )
@@ -52,7 +56,7 @@ function MenuContent() {
         setMenuItems(data)
         
         // Extract unique categories
-        const uniqueCategories = [...new Set(data.map(item => item.categories?.name).filter(Boolean))] as string[]
+        const uniqueCategories = [...new Set(data.map(item => item.food_categories?.name).filter(Boolean))] as string[]
         setCategories(uniqueCategories)
         
         // Set initial category from URL if provided
@@ -70,10 +74,29 @@ function MenuContent() {
   // Filter items by selected category
   const filteredItems = selectedCategory === "all" 
     ? menuItems 
-    : menuItems.filter(item => item.categories?.name === selectedCategory)
+    : menuItems.filter(item => item.food_categories?.name === selectedCategory)
+
+  const handleAddToCart = async (item: any) => {
+    const authenticated = await checkAuth()
+    if (!authenticated) {
+      window.location.href = '/events/login?next=' + window.location.pathname
+      return
+    }
+
+    addToCart({
+      id: item.id,
+      type: 'menu_item',
+      name: item.name,
+      price: Number(item.base_price),
+      image_url: item.image_url,
+      description: item.description,
+    })
+  }
 
   return (
     <div className="min-h-screen bg-background">
+      <FloatingCartButton />
+      <CartModal />
       {/* Header */}
       <section className="relative py-16 sm:py-20 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-amber-950/20 dark:via-orange-950/20 dark:to-rose-950/20">
         <div className="container mx-auto px-4 text-center">
@@ -181,9 +204,18 @@ function MenuContent() {
                               </p>
                             )}
 
-                            {/* Price */}
-                            <div className="mb-0">
-                              <div className="text-2xl font-bold">₱{Number(item.price).toLocaleString()}</div>
+                            {/* Price and Add to Cart */}
+                            <div className="flex items-center justify-between mb-0">
+                              <div className="text-2xl font-bold">₱{Number(item.base_price).toLocaleString()}</div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleAddToCart(item)
+                                }}
+                                className="size-9 rounded-full bg-amber-500 hover:bg-amber-600 flex items-center justify-center transition-colors"
+                              >
+                                <ShoppingCart className="size-4 text-white" />
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -194,7 +226,7 @@ function MenuContent() {
                             {item.name}
                           </h3>
                           <p className="text-white/70 text-xs uppercase tracking-wide">
-                            {item.categories?.name || "Other"}
+                            {item.food_categories?.name || "Other"}
                           </p>
                         </div>
 
@@ -263,7 +295,7 @@ function MenuContent() {
               <div className="w-full md:w-2/5 p-6 sm:p-8 overflow-y-auto max-h-[50vh] md:max-h-full">
                 {/* Category Badge */}
                 <div className="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-100 text-xs font-semibold mb-4 uppercase tracking-wide">
-                  {selectedItem.categories?.name || "Other"}
+                  {selectedItem.food_categories?.name || "Other"}
                 </div>
 
                 {/* Item Name */}
@@ -282,7 +314,7 @@ function MenuContent() {
                 <div className="mb-6 pb-6 border-b border-slate-200 dark:border-slate-700">
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-amber-600 dark:text-amber-500">
-                      ₱{Number(selectedItem.price).toLocaleString()}
+                      ₱{Number(selectedItem.base_price).toLocaleString()}
                     </span>
                   </div>
                 </div>

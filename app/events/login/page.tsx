@@ -45,50 +45,39 @@ export default function LoginPage() {
       if (data.user) {
         console.log("Logged in user ID:", data.user.id)
         
-        // First, check user role from profiles table
-        const { data: profile, error: profileError } = await supabase
+        // First, check if user is a manager (profiles table)
+        const { data: profile } = await supabase
           .from("profiles")
           .select("role, id, email")
           .eq("id", data.user.id)
           .maybeSingle()
 
-        console.log("Profile lookup result:", profile, profileError)
-
-        if (profile) {
-          // If landing_page_manager, redirect to manager dashboard
-          if (profile.role === 'landing_page_manager') {
-            console.log("Redirecting to manager dashboard")
-            router.push("/manager")
-            router.refresh()
-            return
-          }
-          
-          // If customer role, redirect to customer dashboard
-          if (profile.role === 'customer') {
-            console.log("Redirecting to customer dashboard")
-            router.push("/events/dashboard")
-            router.refresh()
-            return
-          }
+        if (profile && profile.role === 'landing_page_manager') {
+          console.log("Redirecting to manager dashboard")
+          router.push("/manager")
+          router.refresh()
+          return
         }
 
-        // If no profile or unknown role, provide helpful error
+        // If not a manager, check if user is a customer (event_customers table)
+        const { data: customer } = await supabase
+          .from("event_customers")
+          .select("id, email, full_name")
+          .eq("auth_id", data.user.id)
+          .maybeSingle()
+
+        if (customer) {
+          console.log("Redirecting to customer dashboard")
+          router.push("/events/dashboard")
+          router.refresh()
+          return
+        }
+
+        // If neither profile nor customer found
         await supabase.auth.signOut()
-        
-        if (profileError) {
-          console.error("Profile error:", profileError)
-          setError(
-            `Database error: ${profileError.message}. Please contact support.`
-          )
-        } else if (!profile) {
-          setError(
-            "No profile found for your account. Your auth ID is: " + data.user.id.substring(0, 8) + "... Please add this to the profiles table."
-          )
-        } else {
-          setError(
-            `Unknown role: ${profile.role}. Please contact support.`
-          )
-        }
+        setError(
+          "No customer profile found. Please sign up first or contact support."
+        )
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.")
