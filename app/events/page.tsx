@@ -16,6 +16,7 @@ import { VideoModal } from "@/components/events/video-modal"
 import { FeaturesSection } from "@/components/events/features-section"
 import { SignatureDishes } from "@/components/restaurant/signature-dishes"
 import { OurStory } from "@/components/restaurant/our-story"
+import { BranchesSection } from "@/components/restaurant/branches-section"
 import { MomentsGallery } from "@/components/restaurant/moments-gallery"
 import { EventsPlace } from "@/components/restaurant/events-place"
 import { FoodCategories } from "@/components/restaurant/food-categories"
@@ -248,6 +249,11 @@ export default async function EventsLandingPage() {
 
       {/* Our Story Section 🆕 */}
       <OurStory />
+
+      {/* Branches Section 🆕 */}
+      <FadeUp>
+        <BranchesSection />
+      </FadeUp>
 
       {/* Events Place Section 🆕 */}
       <div id="venues">
