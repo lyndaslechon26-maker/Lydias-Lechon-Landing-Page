@@ -145,6 +145,11 @@ export function BranchesTable({ branches: initialBranches }: BranchesTableProps)
                         Dine-in
                       </span>
                     )}
+                    {branch.has_takeout && (
+                      <span className="px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-xs text-orange-700 dark:text-orange-400">
+                        Takeout
+                      </span>
+                    )}
                     {branch.has_delivery && (
                       <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-xs text-blue-700 dark:text-blue-400">
                         Delivery
@@ -153,6 +158,11 @@ export function BranchesTable({ branches: initialBranches }: BranchesTableProps)
                     {branch.has_catering && (
                       <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-xs text-purple-700 dark:text-purple-400">
                         Catering
+                      </span>
+                    )}
+                    {branch.has_event_venue && (
+                      <span className="px-2 py-0.5 rounded-full bg-pink-100 dark:bg-pink-900/30 text-xs text-pink-700 dark:text-pink-400">
+                        Event Venue
                       </span>
                     )}
                   </div>
