@@ -72,8 +72,8 @@ export function BranchesTable({ branches: initialBranches }: BranchesTableProps)
             <col className="w-[250px]" />
             <col className="w-[300px]" />
             <col className="w-[150px]" />
-            <col className="w-[200px]" />
-            <col className="w-[120px]" />
+            <col className="w-[280px]" />
+            <col className="w-[140px]" />
             <col className="w-[120px]" />
           </colgroup>
           <thead>
@@ -138,7 +138,7 @@ export function BranchesTable({ branches: initialBranches }: BranchesTableProps)
                 <td className="px-4 py-4">
                   <p className="text-sm font-mono">{branch.phone}</p>
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-6 py-4">
                   <div className="flex flex-wrap gap-1">
                     {branch.has_dine_in && (
                       <span className="px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-xs text-green-700 dark:text-green-400">
@@ -167,7 +167,7 @@ export function BranchesTable({ branches: initialBranches }: BranchesTableProps)
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
                     <span
                       className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium ${

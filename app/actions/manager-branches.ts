@@ -45,12 +45,21 @@ export interface BranchInput {
 export async function getAllBranches() {
   const supabase = await createAdminClient()
 
+  console.log('🔍 Fetching all branches...')
+
   const { data, error } = await supabase
     .from("branches")
     .select("*")
     .order("sort_order", { ascending: true })
 
+  console.log('📊 All branches result:', {
+    count: data?.length || 0,
+    data: data,
+    error: error?.message
+  })
+
   if (error) {
+    console.error('❌ Error fetching branches:', error)
     return { branches: null, error: error.message }
   }
 
@@ -63,13 +72,22 @@ export async function getAllBranches() {
 export async function getActiveBranches() {
   const supabase = await createAdminClient()
 
+  console.log('🔍 Fetching active branches...')
+
   const { data, error } = await supabase
     .from("branches")
     .select("*")
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
 
+  console.log('📊 Active branches result:', {
+    count: data?.length || 0,
+    data: data,
+    error: error?.message
+  })
+
   if (error) {
+    console.error('❌ Error fetching active branches:', error)
     return { branches: null, error: error.message }
   }
 
