@@ -1,4 +1,4 @@
-import { branches } from "@/lib/data/branches"
+import { getActiveBranches } from "@/app/actions/manager-branches"
 import { MapPin, Phone, Clock, CheckCircle, ExternalLink, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -8,7 +8,30 @@ export const metadata = {
   description: "Find a Lydia's Lechon branch near you. 9 locations across Metro Manila and Luzon.",
 }
 
-export default function BranchesPage() {
+export default async function BranchesPage() {
+  const { branches } = await getActiveBranches()
+
+  if (!branches || branches.length === 0) {
+    return (
+      <div className="min-h-screen bg-background pt-20 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">No branches available at the moment.</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Helper to get service badges
+  const getServices = (branch: any) => {
+    const services = []
+    if (branch.has_dine_in) services.push("Dine-in")
+    if (branch.has_takeout) services.push("Take-out")
+    if (branch.has_delivery) services.push("Delivery")
+    if (branch.has_catering) services.push("Catering")
+    if (branch.has_event_venue) services.push("Event Venue")
+    return services
+  }
+
   return (
     <div className="min-h-screen bg-background pt-20">
       {/* Header */}
@@ -36,7 +59,7 @@ export default function BranchesPage() {
             </h1>
             
             <p className="text-lg text-muted-foreground">
-              Visit any of our 9 convenient locations across Metro Manila and Luzon to experience authentic Filipino lechon
+              Visit any of our {branches.length} convenient locations across Metro Manila and Luzon to experience authentic Filipino lechon
             </p>
           </div>
         </div>
@@ -54,9 +77,9 @@ export default function BranchesPage() {
                 {/* Branch Image */}
                 <div className="relative h-48 overflow-hidden bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20">
                   <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent z-10" />
-                  {branch.image ? (
+                  {branch.image_url ? (
                     <img 
-                      src={branch.image}
+                      src={branch.image_url}
                       alt={branch.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -73,11 +96,11 @@ export default function BranchesPage() {
                     {branch.name}
                   </h3>
 
-                  {/* Address */}
+                  {/* Location */}
                   <div className="flex items-start gap-3 mb-3 text-muted-foreground">
                     <MapPin className="size-5 text-amber-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm leading-relaxed">{branch.address}</p>
+                      <p className="text-sm leading-relaxed">{branch.location}</p>
                       {branch.landmark && (
                         <p className="text-xs text-muted-foreground/70 mt-1">📍 {branch.landmark}</p>
                       )}
@@ -107,7 +130,7 @@ export default function BranchesPage() {
                       Available Services
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {branch.services.map((service) => (
+                      {getServices(branch).map((service) => (
                         <span 
                           key={service}
                           className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-600/10 border border-amber-600/20 text-xs text-amber-600 dark:text-amber-500"
@@ -120,16 +143,18 @@ export default function BranchesPage() {
                   </div>
 
                   {/* Google Maps Button */}
-                  <a
-                    href={branch.googleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold text-sm transition-all hover:shadow-lg hover:shadow-amber-600/30 group"
-                  >
-                    <MapPin className="size-4" />
-                    Get Directions
-                    <ExternalLink className="size-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                  </a>
+                  {branch.google_maps_url && (
+                    <a
+                      href={branch.google_maps_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold text-sm transition-all hover:shadow-lg hover:shadow-amber-600/30 group"
+                    >
+                      <MapPin className="size-4" />
+                      Get Directions
+                      <ExternalLink className="size-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </a>
+                  )}
                 </div>
               </div>
             ))}

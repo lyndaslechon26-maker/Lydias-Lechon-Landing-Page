@@ -23,8 +23,9 @@ const NAV: NavSection[] = [
     items: [
       { href: "/manager/menu", label: "Menu Items", icon: "UtensilsCrossed" },
       { href: "/manager/menu-packages", label: "Menu Packages", icon: "ChefHat" },
-      { href: "/manager/venues", label: "Event Venues", icon: "MapPin" },
+      { href: "/manager/venues", label: "Event Venues", icon: "Calendar" },
       { href: "/manager/packages", label: "Event Packages", icon: "Package" },
+      { href: "/manager/branches", label: "Branches", icon: "MapPin" },
       { href: "/manager/gallery", label: "Gallery", icon: "Image" },
     ]
   },
