@@ -259,11 +259,11 @@ export function EventsPlace() {
             
             {/* Venue Name & Rating */}
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-1 mb-2">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <Star key={star} className="size-5 fill-amber-500 text-amber-500" />
+                  <Star key={star} className="size-4 fill-amber-500 text-amber-500" />
                 ))}
-                <span className="text-sm text-muted-foreground ml-1">(4.9)</span>
+                <span className="text-sm text-muted-foreground ml-2">(4.9)</span>
               </div>
               <h3 className="text-3xl sm:text-4xl font-bold mb-2">
                 {currentSpace.name}
