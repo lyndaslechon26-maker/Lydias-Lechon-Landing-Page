@@ -14,7 +14,8 @@ import {
   User,
   LogOut,
   Settings,
-  UtensilsCrossed
+  UtensilsCrossed,
+  MapPin
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -99,6 +100,7 @@ export function EventsNavbar() {
     { href: "#venues", label: "Venues", icon: Building2, isScroll: true, sectionId: "venues" },
     { href: "#packages", label: "Packages", icon: Package, isScroll: true, sectionId: "packages" },
     { href: "#menu", label: "Menu", icon: UtensilsCrossed, isScroll: true, sectionId: "menu" },
+    { href: "/events/branches", label: "Branches", icon: MapPin, isScroll: false },
     { href: "#gallery", label: "Gallery", icon: ImageIcon, isScroll: true, sectionId: "gallery" },
     { href: "#contact", label: "Contact", icon: Phone, isScroll: true, sectionId: "contact" },
   ]
