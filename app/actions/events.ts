@@ -657,8 +657,7 @@ export async function getCustomerBookings() {
     .select(`
       *,
       venue:event_venues(name, location),
-      package:event_packages(name),
-      addons:event_booking_addons(*, addon:event_addons(name))
+      package:event_packages(name)
     `)
     .eq("customer_id", customer.id)
     .order("created_at", { ascending: false })
@@ -680,7 +679,6 @@ export async function getBooking(bookingId: string) {
       venue:event_venues(*),
       package:event_packages(*),
       menu_package:menu_packages(*),
-      addons:event_booking_addons(*, addon:event_addons(*)),
       payments:event_payments(*)
     `)
     .eq("id", bookingId)
