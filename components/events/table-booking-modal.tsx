@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Calendar, Clock, Users, X } from "lucide-react"
+import { Calendar, Clock, Users, X, CheckCircle2, Phone, Mail } from "lucide-react"
 import { toast } from "sonner"
 import { createTableReservation } from "@/app/actions/events"
 import { useRouter } from "next/navigation"
@@ -24,6 +24,8 @@ export function TableBookingModal({ open, onOpenChange }: TableBookingModalProps
     specialRequests: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+  const [reservationDetails, setReservationDetails] = useState<any>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,7 +45,17 @@ export function TableBookingModal({ open, onOpenChange }: TableBookingModalProps
       return
     }
 
-    toast.success("Table reserved successfully! We'll send you a confirmation email shortly.")
+    // Store reservation details and show success dialog
+    setReservationDetails({
+      date: formData.date,
+      time: formData.time,
+      guests: formData.guests,
+    })
+    setShowSuccessDialog(true)
+  }
+
+  const handleCloseSuccess = () => {
+    setShowSuccessDialog(false)
     onOpenChange(false)
     
     // Reset form
@@ -53,6 +65,7 @@ export function TableBookingModal({ open, onOpenChange }: TableBookingModalProps
       guests: "",
       specialRequests: "",
     })
+    setReservationDetails(null)
 
     // Refresh dashboard
     router.refresh()
@@ -67,6 +80,125 @@ export function TableBookingModal({ open, onOpenChange }: TableBookingModalProps
 
   // Get minimum date (today)
   const today = new Date().toISOString().split("T")[0]
+
+  // Success Dialog
+  if (showSuccessDialog) {
+    return (
+      <Dialog open={true} onOpenChange={handleCloseSuccess}>
+        <DialogContent className="sm:max-w-[500px]">
+          <div className="text-center space-y-6 py-6">
+            {/* Success Icon */}
+            <div className="flex justify-center">
+              <div className="rounded-full bg-green-100 dark:bg-green-900/30 p-3">
+                <CheckCircle2 className="size-16 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+
+            {/* Thank You Message */}
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold text-green-600 dark:text-green-400">
+                Thank You!
+              </h2>
+              <p className="text-xl font-semibold">
+                Your table reservation has been received
+              </p>
+            </div>
+
+            {/* Reservation Details */}
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-lg p-6 space-y-3 text-left border border-amber-200 dark:border-amber-800">
+              <h3 className="font-semibold text-lg text-center mb-4 text-amber-900 dark:text-amber-100">
+                Reservation Details
+              </h3>
+              <div className="grid gap-3">
+                <div className="flex items-center gap-3">
+                  <Calendar className="size-5 text-amber-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Date</p>
+                    <p className="font-semibold">
+                      {new Date(reservationDetails?.date).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Clock className="size-5 text-amber-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Time</p>
+                    <p className="font-semibold">{reservationDetails?.time}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Users className="size-5 text-amber-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Number of Guests</p>
+                    <p className="font-semibold">{reservationDetails?.guests} {parseInt(reservationDetails?.guests) === 1 ? 'guest' : 'guests'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Important Reminders */}
+            <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-6 space-y-4 text-left border border-blue-200 dark:border-blue-800">
+              <h3 className="font-semibold text-lg flex items-center gap-2 text-blue-900 dark:text-blue-100">
+                <Phone className="size-5 text-blue-600" />
+                Important Reminders
+              </h3>
+              <ul className="space-y-3 text-sm">
+                <li className="flex gap-3">
+                  <span className="text-blue-600 font-bold flex-shrink-0">•</span>
+                  <p>
+                    <strong>Please ensure your mobile number is always active.</strong> We will send you a confirmation SMS and call you to verify your reservation.
+                  </p>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-blue-600 font-bold flex-shrink-0">•</span>
+                  <p>
+                    A confirmation email has been sent to your registered email address with all the details.
+                  </p>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-blue-600 font-bold flex-shrink-0">•</span>
+                  <p>
+                    Please arrive <strong>15 minutes before</strong> your reservation time.
+                  </p>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-blue-600 font-bold flex-shrink-0">•</span>
+                  <p>
+                    If you need to cancel or modify your reservation, please contact us at least <strong>24 hours in advance</strong>.
+                  </p>
+                </li>
+              </ul>
+            </div>
+
+            {/* Contact Information */}
+            <div className="text-sm text-muted-foreground space-y-2 pt-2">
+              <p className="flex items-center justify-center gap-2">
+                <Phone className="size-4" />
+                <span>Questions? Call us at <strong className="text-foreground">+63 123 456 7890</strong></span>
+              </p>
+              <p className="flex items-center justify-center gap-2">
+                <Mail className="size-4" />
+                <span>Email: <strong className="text-foreground">reservations@lydiaslechon.com</strong></span>
+              </p>
+            </div>
+
+            {/* Close Button */}
+            <Button
+              onClick={handleCloseSuccess}
+              className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold py-6 text-lg"
+            >
+              Got it, Thanks!
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

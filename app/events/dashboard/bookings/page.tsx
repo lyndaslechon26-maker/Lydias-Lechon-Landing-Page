@@ -12,6 +12,7 @@ import {
   FileText
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ReserveTableButton } from "@/components/events/reserve-table-button"
 
 export const metadata = {
   title: "My Bookings - Event Venue",
@@ -354,10 +355,7 @@ export default async function MyBookingsPage() {
                     Book Event Venue
                   </Button>
                 </Link>
-                <Button variant="outline">
-                  <Users className="size-4 mr-2" />
-                  Reserve a Table
-                </Button>
+                <ReserveTableButton />
               </div>
             </div>
           )}

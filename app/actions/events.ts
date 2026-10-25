@@ -709,7 +709,7 @@ export async function createTableReservation(input: {
   // Get customer profile
   const { data: customer } = await supabase
     .from("event_customers")
-    .select("id, name, email, phone")
+    .select("id, full_name, email, phone")
     .eq("auth_id", user.id)
     .single()
 
@@ -724,7 +724,7 @@ export async function createTableReservation(input: {
       reservation_time: input.reservationTime,
       num_guests: input.numGuests,
       special_requests: input.specialRequests || null,
-      customer_name: customer.name,
+      customer_name: customer.full_name,
       customer_email: customer.email,
       customer_phone: customer.phone || null,
       status: "pending"
