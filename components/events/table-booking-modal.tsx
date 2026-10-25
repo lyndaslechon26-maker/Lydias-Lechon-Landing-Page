@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Calendar, Clock, Users, X } from "lucide-react"
 import { toast } from "sonner"
+import { createTableReservation } from "@/app/actions/events"
+import { useRouter } from "next/navigation"
 
 interface TableBookingModalProps {
   open: boolean
@@ -14,6 +16,7 @@ interface TableBookingModalProps {
 }
 
 export function TableBookingModal({ open, onOpenChange }: TableBookingModalProps) {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     date: "",
     time: "",
@@ -26,11 +29,21 @@ export function TableBookingModal({ open, onOpenChange }: TableBookingModalProps
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    const { reservation, error } = await createTableReservation({
+      reservationDate: formData.date,
+      reservationTime: formData.time,
+      numGuests: parseInt(formData.guests),
+      specialRequests: formData.specialRequests || undefined
+    })
+
+    setIsSubmitting(false)
+
+    if (error) {
+      toast.error(error)
+      return
+    }
 
     toast.success("Table reserved successfully! We'll send you a confirmation email shortly.")
-    setIsSubmitting(false)
     onOpenChange(false)
     
     // Reset form
@@ -40,6 +53,9 @@ export function TableBookingModal({ open, onOpenChange }: TableBookingModalProps
       guests: "",
       specialRequests: "",
     })
+
+    // Refresh dashboard
+    router.refresh()
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

@@ -1,5 +1,5 @@
 import { requireAuth } from "@/lib/auth/customer-auth"
-import { getCustomerBookings } from "@/app/actions/events"
+import { getCustomerBookings, getCustomerTableReservations } from "@/app/actions/events"
 import Link from "next/link"
 import { 
   Calendar,
@@ -36,6 +36,7 @@ const paymentStatusColors = {
 export default async function MyBookingsPage() {
   const customer = await requireAuth()
   const { bookings, error } = await getCustomerBookings()
+  const { reservations, error: reservationsError } = await getCustomerTableReservations()
 
   if (error) {
     return (
@@ -54,6 +55,14 @@ export default async function MyBookingsPage() {
   const sortedBookings = bookings?.sort((a, b) => 
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   ) || []
+
+  // Sort table reservations
+  const sortedReservations = reservations?.sort((a, b) => 
+    new Date(b.reservation_date).getTime() - new Date(a.reservation_date).getTime()
+  ) || []
+
+  // Total bookings count
+  const totalBookings = sortedBookings.length + sortedReservations.length
 
   // Group by status
   const upcomingBookings = sortedBookings.filter(
@@ -96,15 +105,15 @@ export default async function MyBookingsPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="p-4 rounded-lg border bg-card">
               <p className="text-sm text-muted-foreground mb-1">Total Bookings</p>
-              <p className="text-2xl font-bold">{sortedBookings.length}</p>
+              <p className="text-2xl font-bold">{totalBookings}</p>
             </div>
             <div className="p-4 rounded-lg border bg-card">
-              <p className="text-sm text-muted-foreground mb-1">Upcoming</p>
-              <p className="text-2xl font-bold text-blue-600">{upcomingBookings.length}</p>
+              <p className="text-sm text-muted-foreground mb-1">Event Venues</p>
+              <p className="text-2xl font-bold text-blue-600">{sortedBookings.length}</p>
             </div>
             <div className="p-4 rounded-lg border bg-card">
-              <p className="text-sm text-muted-foreground mb-1">Pending</p>
-              <p className="text-2xl font-bold text-amber-600">{pendingBookings.length}</p>
+              <p className="text-sm text-muted-foreground mb-1">Table Reservations</p>
+              <p className="text-2xl font-bold text-amber-600">{sortedReservations.length}</p>
             </div>
             <div className="p-4 rounded-lg border bg-card">
               <p className="text-sm text-muted-foreground mb-1">Completed</p>
@@ -331,19 +340,96 @@ export default async function MyBookingsPage() {
           )}
 
           {/* Empty State */}
-          {sortedBookings.length === 0 && (
+          {sortedBookings.length === 0 && sortedReservations.length === 0 && (
             <div className="text-center py-16 border rounded-2xl bg-muted/30">
               <Calendar className="size-16 text-muted-foreground/30 mx-auto mb-4" />
               <h3 className="text-xl font-bold mb-2">No bookings yet</h3>
               <p className="text-muted-foreground mb-6">
-                Start by creating your first event booking
+                Start by creating your first event booking or table reservation
               </p>
-              <Link href="/events/book">
-                <Button className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700">
-                  <Calendar className="size-4 mr-2" />
-                  Book Your First Event
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/events/book">
+                  <Button className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700">
+                    <Calendar className="size-4 mr-2" />
+                    Book Event Venue
+                  </Button>
+                </Link>
+                <Button variant="outline">
+                  <Users className="size-4 mr-2" />
+                  Reserve a Table
                 </Button>
-              </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Table Reservations Section */}
+          {sortedReservations.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Users className="size-5 text-amber-600" />
+                Table Reservations ({sortedReservations.length})
+              </h2>
+              <div className="space-y-4">
+                {sortedReservations.map((reservation) => {
+                  const reservationDate = new Date(reservation.reservation_date)
+                  const isUpcoming = reservationDate >= new Date() && reservation.status !== "cancelled"
+                  
+                  return (
+                    <div
+                      key={reservation.id}
+                      className={`p-6 rounded-xl border bg-card ${isUpcoming ? 'hover:shadow-lg hover:border-amber-600' : 'opacity-70'} transition-all`}
+                    >
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="flex-1 space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-lg font-bold">
+                              Table Reservation
+                            </h3>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              reservation.status === "confirmed" ? statusColors.confirmed :
+                              reservation.status === "pending" ? statusColors.pending :
+                              reservation.status === "cancelled" ? statusColors.cancelled :
+                              statusColors.completed
+                            }`}>
+                              {reservation.status}
+                            </span>
+                          </div>
+                          
+                          <div className="grid gap-2 sm:grid-cols-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="size-4 flex-shrink-0" />
+                              <span>{reservationDate.toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Clock className="size-4 flex-shrink-0" />
+                              <span>{reservation.reservation_time}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Users className="size-4 flex-shrink-0" />
+                              <span>{reservation.num_guests} guests</span>
+                            </div>
+                          </div>
+
+                          {reservation.special_requests && (
+                            <p className="text-sm text-muted-foreground italic">
+                              Note: {reservation.special_requests}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">
+                            {isUpcoming ? "Upcoming" : "Past"}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Booked {new Date(reservation.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>

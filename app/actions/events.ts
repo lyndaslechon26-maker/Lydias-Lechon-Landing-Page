@@ -689,6 +689,108 @@ export async function getBooking(bookingId: string) {
 }
 
 // ============================================================
+// TABLE RESERVATIONS
+// ============================================================
+
+/**
+ * Create table reservation
+ */
+export async function createTableReservation(input: {
+  reservationDate: string
+  reservationTime: string
+  numGuests: number
+  specialRequests?: string
+}) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  // Get customer profile
+  const { data: customer } = await supabase
+    .from("event_customers")
+    .select("id, name, email, phone")
+    .eq("auth_id", user.id)
+    .single()
+
+  if (!customer) return { error: "Customer profile not found" }
+
+  // Create reservation
+  const { data, error } = await supabase
+    .from("table_reservations")
+    .insert({
+      customer_id: customer.id,
+      reservation_date: input.reservationDate,
+      reservation_time: input.reservationTime,
+      num_guests: input.numGuests,
+      special_requests: input.specialRequests || null,
+      customer_name: customer.name,
+      customer_email: customer.email,
+      customer_phone: customer.phone || null,
+      status: "pending"
+    })
+    .select()
+    .single()
+
+  if (error) return { error: error.message }
+
+  revalidatePath("/events/dashboard")
+  revalidatePath("/events/dashboard/bookings")
+
+  return { reservation: data, error: null }
+}
+
+/**
+ * Get customer table reservations
+ */
+export async function getCustomerTableReservations() {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const { data: customer } = await supabase
+    .from("event_customers")
+    .select("id")
+    .eq("auth_id", user.id)
+    .single()
+
+  if (!customer) return { error: "Customer profile not found" }
+
+  const { data, error } = await supabase
+    .from("table_reservations")
+    .select("*")
+    .eq("customer_id", customer.id)
+    .order("reservation_date", { ascending: false })
+
+  if (error) return { error: error.message }
+  return { reservations: data, error: null }
+}
+
+/**
+ * Cancel table reservation
+ */
+export async function cancelTableReservation(reservationId: string, reason?: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from("table_reservations")
+    .update({
+      status: "cancelled",
+      cancelled_at: new Date().toISOString(),
+      cancellation_reason: reason || null
+    })
+    .eq("id", reservationId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath("/events/dashboard")
+  revalidatePath("/events/dashboard/bookings")
+
+  return { success: true, error: null }
+}
+
+// ============================================================
 // INQUIRIES
 // ============================================================
 
