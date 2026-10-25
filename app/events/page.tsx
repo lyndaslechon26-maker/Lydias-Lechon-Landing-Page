@@ -25,27 +25,7 @@ import { WaveDivider } from "@/components/ui/wave-divider"
 import { FadeUp, ScaleFade } from "@/components/ui/scroll-animations"
 import { GoldDivider } from "@/components/ui/gold-divider"
 import { CartWrapper } from "@/components/cart/cart-wrapper"
-
-export const metadata = {
-  title: "Lumière Restaurant - Fine Dining Experience in Manila",
-  description:
-    "Experience culinary excellence at Lumière Restaurant. Award-winning chefs, fresh ingredients, and an unforgettable dining atmosphere. Reserve your table today!",
-  keywords: "fine dining Manila, restaurant Philippines, best food Manila, gourmet restaurant, luxury dining, table reservation Manila",
-  openGraph: {
-    title: "Lumière Restaurant - Fine Dining Experience in Manila",
-    description: "Experience culinary excellence with award-winning chefs, fresh ingredients, and exceptional service.",
-    type: "website",
-    url: "https://yourdomain.com",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Lumière Restaurant"
-      }
-    ]
-  }
-}
+import { BookTableButton } from "@/components/events/book-table-button"
 
 export default async function EventsLandingPage() {
   // Structured Data for Restaurant SEO
@@ -141,18 +121,7 @@ export default async function EventsLandingPage() {
 
               {/* CTA Buttons - Side by side on mobile */}
               <div className="flex flex-row items-center justify-center lg:justify-start gap-3 mb-6 animate-in fade-in slide-in-from-bottom duration-700 delay-400">
-                <Link href="/order">
-                  <Button 
-                    size="lg"
-                    className="group relative overflow-hidden bg-gradient-to-r from-amber-600 to-orange-600 px-6 sm:px-8 py-4 sm:py-6 text-sm sm:text-lg font-semibold shadow-2xl shadow-amber-500/25 transition-all hover:shadow-amber-500/40 hover:scale-105 active:scale-95"
-                  >
-                    <span className="relative z-10 flex items-center gap-1 sm:gap-2">
-                      Book A Table
-                      <ChevronRight className="size-4 sm:size-5 transition-transform group-hover:translate-x-1" />
-                    </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 opacity-0 transition-opacity group-hover:opacity-100"></div>
-                  </Button>
-                </Link>
+                <BookTableButton variant="hero" />
                 
                 <Link href="/events/venues">
                   <Button 
@@ -312,14 +281,7 @@ export default async function EventsLandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/order">
-              <Button 
-                size="lg"
-                className="bg-gradient-to-r from-amber-600 to-orange-600 px-8 py-6 text-lg font-semibold shadow-2xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105 transition-all"
-              >
-                Book A Table
-              </Button>
-            </Link>
+            <BookTableButton variant="cta" />
             
             <Link href="/events/venues">
               <Button 
