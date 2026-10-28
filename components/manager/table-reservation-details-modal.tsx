@@ -340,23 +340,28 @@ export function TableReservationDetailsModal({
             </div>
           )}
 
-          {/* Cancellation/No-Show Info */}
+          {/* Cancellation/Declined Reason - Show next to Special Requests */}
           {(reservation.status === "cancelled" || reservation.status === "no_show") &&
             reservation.cancellation_reason && (
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">
-                  {reservation.status === "cancelled" ? "Cancellation" : "No-Show"} Information
+                <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 flex items-center gap-2">
+                  <XCircle className="size-5" />
+                  {reservation.status === "cancelled" ? "Declined" : "No-Show"} Reason
                 </h3>
                 <div className="p-4 rounded-lg border bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800">
-                  <p className="text-sm font-medium mb-2">Reason:</p>
-                  <p className="text-sm leading-relaxed">{reservation.cancellation_reason}</p>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap mb-3">
+                    {reservation.cancellation_reason}
+                  </p>
                   {reservation.cancelled_at && (
-                    <p className="text-xs text-muted-foreground mt-3">
-                      {new Date(reservation.cancelled_at).toLocaleString("en-US", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
-                    </p>
+                    <div className="pt-3 border-t border-red-200 dark:border-red-800">
+                      <p className="text-xs text-muted-foreground">
+                        {reservation.status === "cancelled" ? "Declined" : "Marked"} on{" "}
+                        {new Date(reservation.cancelled_at).toLocaleString("en-US", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
