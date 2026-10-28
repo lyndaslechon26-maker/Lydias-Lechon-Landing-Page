@@ -1,5 +1,5 @@
 import { requireAuth } from "@/lib/auth/customer-auth"
-import { getCustomerBookings } from "@/app/actions/events"
+import { getCustomerBookings, getCustomerTableReservations } from "@/app/actions/events"
 import Link from "next/link"
 import { 
   Calendar, 
@@ -25,11 +25,17 @@ export const metadata = {
 export default async function DashboardPage() {
   const customer = await requireAuth()
   const { bookings } = await getCustomerBookings()
+  const { reservations } = await getCustomerTableReservations()
 
-  // Calculate stats
-  const totalBookings = bookings?.length || 0
-  const pendingBookings = bookings?.filter(b => b.status === "pending").length || 0
-  const confirmedBookings = bookings?.filter(b => b.status === "confirmed" || b.status === "paid").length || 0
+  // Calculate stats - include both event bookings and table reservations
+  const totalEventBookings = bookings?.length || 0
+  const totalTableReservations = reservations?.length || 0
+  const totalBookings = totalEventBookings + totalTableReservations
+  
+  const pendingBookings = (bookings?.filter(b => b.status === "pending").length || 0) + 
+                          (reservations?.filter(r => r.status === "pending").length || 0)
+  const confirmedBookings = (bookings?.filter(b => b.status === "confirmed" || b.status === "paid").length || 0) +
+                            (reservations?.filter(r => r.status === "confirmed").length || 0)
   const totalSpent = bookings?.reduce((sum, b) => sum + Number(b.total_paid || 0), 0) || 0
 
   return (
@@ -160,68 +166,141 @@ export default async function DashboardPage() {
 
       {/* Recent Bookings */}
       <section className="py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Recent Bookings</h2>
-            {bookings && bookings.length > 3 && (
-              <Link href="/events/dashboard/bookings">
-                <Button variant="ghost" size="sm">
-                  View All
-                  <ChevronRight className="size-4 ml-1" />
-                </Button>
-              </Link>
+        <div className="container mx-auto px-4 space-y-8">
+          {/* Event Bookings */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Recent Event Bookings</h2>
+              {bookings && bookings.length > 3 && (
+                <Link href="/events/dashboard/bookings">
+                  <Button variant="ghost" size="sm">
+                    View All
+                    <ChevronRight className="size-4 ml-1" />
+                  </Button>
+                </Link>
+              )}
+            </div>
+
+            {bookings && bookings.length > 0 ? (
+              <div className="space-y-4">
+                {bookings.slice(0, 3).map((booking) => (
+                  <Link
+                    key={booking.id}
+                    href={`/events/dashboard/bookings/${booking.id}`}
+                    className="block p-6 rounded-xl border bg-card hover:shadow-lg hover:border-amber-600 transition-all"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-semibold">{booking.event_name || `${booking.event_type} Event`}</h3>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            booking.status === "confirmed" || booking.status === "paid"
+                              ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                              : booking.status === "pending"
+                              ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+                              : "bg-gray-100 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400"
+                          }`}>
+                            {booking.status}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                          <span>📅 {new Date(booking.event_date).toLocaleDateString()}</span>
+                          <span>🏢 {booking.venue_name}</span>
+                          <span>👥 {booking.num_guests} guests</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-amber-600">
+                          ₱{Number(booking.total_amount).toLocaleString()}
+                        </p>
+                        <p className="text-sm text-muted-foreground">{booking.booking_number}</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 border rounded-2xl bg-muted/30">
+                <Calendar className="size-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">No event bookings yet</p>
+              </div>
             )}
           </div>
 
-          {bookings && bookings.length > 0 ? (
-            <div className="space-y-4">
-              {bookings.slice(0, 3).map((booking) => (
-                <Link
-                  key={booking.id}
-                  href={`/events/dashboard/bookings/${booking.id}`}
-                  className="block p-6 rounded-xl border bg-card hover:shadow-lg hover:border-amber-600 transition-all"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold">{booking.event_name || `${booking.event_type} Event`}</h3>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          booking.status === "confirmed" || booking.status === "paid"
-                            ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
-                            : booking.status === "pending"
-                            ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
-                            : "bg-gray-100 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400"
-                        }`}>
-                          {booking.status}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-                        <span>📅 {new Date(booking.event_date).toLocaleDateString()}</span>
-                        <span>🏢 {booking.venue_name}</span>
-                        <span>👥 {booking.num_guests} guests</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-amber-600">
-                        ₱{Number(booking.total_amount).toLocaleString()}
-                      </p>
-                      <p className="text-sm text-muted-foreground">{booking.booking_number}</p>
-                    </div>
-                  </div>
+          {/* Table Reservations */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Recent Table Reservations</h2>
+              {reservations && reservations.length > 3 && (
+                <Link href="/events/dashboard/bookings">
+                  <Button variant="ghost" size="sm">
+                    View All
+                    <ChevronRight className="size-4 ml-1" />
+                  </Button>
                 </Link>
-              ))}
+              )}
             </div>
-          ) : (
-            <div className="text-center py-16 border rounded-2xl bg-muted/30">
-              <Calendar className="size-16 text-muted-foreground/30 mx-auto mb-4" />
-              <p className="text-muted-foreground mb-4">No bookings yet</p>
-              <Link href="/events/book">
-                <Button className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700">
-                  Book Your First Event
-                </Button>
-              </Link>
-            </div>
-          )}
+
+            {reservations && reservations.length > 0 ? (
+              <div className="space-y-4">
+                {reservations.slice(0, 3).map((reservation) => {
+                  const reservationDate = new Date(reservation.reservation_date)
+                  const formatTime12Hour = (time24: string) => {
+                    const [hours, minutes] = time24.split(':')
+                    const hour = parseInt(hours)
+                    const ampm = hour >= 12 ? 'PM' : 'AM'
+                    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+                    return `${hour12}:${minutes} ${ampm}`
+                  }
+                  
+                  return (
+                    <div
+                      key={reservation.id}
+                      className="p-6 rounded-xl border bg-card hover:shadow-lg hover:border-orange-600 transition-all"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <UtensilsCrossed className="size-5 text-orange-600" />
+                            <h3 className="font-semibold">Table Reservation</h3>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              reservation.status === "confirmed"
+                                ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                                : reservation.status === "pending"
+                                ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+                                : reservation.status === "cancelled"
+                                ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                                : "bg-gray-100 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400"
+                            }`}>
+                              {reservation.status}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                            <span>📅 {reservationDate.toLocaleDateString()}</span>
+                            <span>🕐 {formatTime12Hour(reservation.reservation_time)}</span>
+                            <span>👥 {reservation.num_guests} guests</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">
+                            {reservationDate >= new Date() && reservation.status !== "cancelled" 
+                              ? "Upcoming" 
+                              : "Past"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12 border rounded-2xl bg-muted/30">
+                <UtensilsCrossed className="size-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground mb-4">No table reservations yet</p>
+                <ReserveTableButton variant="button" />
+              </div>
+            )}
+          </div>
         </div>
       </section>
     </div>
