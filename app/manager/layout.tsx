@@ -14,6 +14,7 @@ const NAV: NavSection[] = [
     label: "OPERATIONS",
     items: [
       { href: "/manager/bookings", label: "Event Bookings", icon: "Calendar" },
+      { href: "/manager/table-reservations", label: "Table Bookings", icon: "UtensilsCrossed" },
       { href: "/manager/orders", label: "Online Orders", icon: "ShoppingCart" },
       { href: "/manager/customers", label: "Customers", icon: "Users" },
     ]
