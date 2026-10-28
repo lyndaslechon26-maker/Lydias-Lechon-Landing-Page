@@ -328,44 +328,47 @@ export function TableReservationDetailsModal({
             </div>
           </div>
 
-          {/* Special Requests */}
-          {reservation.special_requests && (
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-foreground">Special Requests</h3>
-              <div className="p-4 rounded-lg border bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {reservation.special_requests}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Cancellation/Declined Reason - Show next to Special Requests */}
-          {(reservation.status === "cancelled" || reservation.status === "no_show") &&
-            reservation.cancellation_reason && (
+          {/* Special Requests and Cancellation Reason - Side by Side or Stacked */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Special Requests */}
+            {reservation.special_requests && (
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 flex items-center gap-2">
-                  <XCircle className="size-5" />
-                  {reservation.status === "cancelled" ? "Declined" : "No-Show"} Reason
-                </h3>
-                <div className="p-4 rounded-lg border bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800">
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap mb-3">
-                    {reservation.cancellation_reason}
+                <h3 className="text-lg font-semibold text-foreground">Special Requests</h3>
+                <div className="p-4 rounded-lg border bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {reservation.special_requests}
                   </p>
-                  {reservation.cancelled_at && (
-                    <div className="pt-3 border-t border-red-200 dark:border-red-800">
-                      <p className="text-xs text-muted-foreground">
-                        {reservation.status === "cancelled" ? "Declined" : "Marked"} on{" "}
-                        {new Date(reservation.cancelled_at).toLocaleString("en-US", {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        })}
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
             )}
+
+            {/* Cancellation/Decline Reason */}
+            {(reservation.status === "cancelled" || reservation.status === "no_show") &&
+              reservation.cancellation_reason && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 flex items-center gap-2">
+                    <XCircle className="size-5" />
+                    {reservation.status === "cancelled" ? "Decline" : "No-Show"} Reason
+                  </h3>
+                  <div className="p-4 rounded-lg border bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap mb-3">
+                      {reservation.cancellation_reason}
+                    </p>
+                    {reservation.cancelled_at && (
+                      <div className="pt-3 border-t border-red-200 dark:border-red-800">
+                        <p className="text-xs text-muted-foreground">
+                          {reservation.status === "cancelled" ? "Declined" : "Marked"} on{" "}
+                          {new Date(reservation.cancelled_at).toLocaleString("en-US", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+          </div>
 
           {/* Action Buttons */}
           <div className="space-y-3 pt-4 border-t">
