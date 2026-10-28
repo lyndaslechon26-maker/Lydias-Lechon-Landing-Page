@@ -11,9 +11,11 @@ import {
   CalendarCheck,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  UtensilsCrossed
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ReserveTableButton } from "@/components/events/reserve-table-button"
 
 export const metadata = {
   title: "Dashboard - Event Venue",
@@ -109,7 +111,7 @@ export default async function DashboardPage() {
       <section className="py-8">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold mb-6">Quick Actions</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Link href="/events/dashboard/bookings">
               <div className="group p-6 rounded-xl border bg-card hover:shadow-lg hover:border-amber-600 transition-all">
                 <div className="flex items-start justify-between mb-3">
@@ -135,6 +137,10 @@ export default async function DashboardPage() {
                 <p className="text-sm text-muted-foreground">Book a new event venue or package</p>
               </div>
             </Link>
+
+            <div className="group p-6 rounded-xl border bg-card hover:shadow-lg hover:border-amber-600 transition-all cursor-pointer">
+              <ReserveTableButton variant="card" />
+            </div>
 
             <Link href="/events/dashboard/profile">
               <div className="group p-6 rounded-xl border bg-card hover:shadow-lg hover:border-amber-600 transition-all">
