@@ -17,6 +17,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 import { FadeUp } from '@/components/ui/scroll-animations'
+import { VenueBookingModal } from '@/components/events/venue-booking-modal'
 
 interface EventSpace {
   id: string
@@ -37,6 +38,7 @@ export function EventsPlace() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [eventSpaces, setEventSpaces] = useState<EventSpace[]>([])
   const [loading, setLoading] = useState(true)
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
 
   useEffect(() => {
     async function fetchVenues() {
@@ -150,6 +152,13 @@ export function EventsPlace() {
 
   return (
     <section className="py-16 sm:py-24 bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
+      {/* Booking Modal */}
+      <VenueBookingModal
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        venue={currentSpace}
+      />
+      
       <div className="container mx-auto px-4 lg:px-8 max-w-[1400px]">
         
         {/* Section Header */}
@@ -316,10 +325,19 @@ export function EventsPlace() {
                   size="lg"
                   className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold shadow-lg"
                 >
-                  Book This Venue
+                  View Details
                   <ChevronRight className="size-4 ml-2" />
                 </Button>
               </Link>
+              <Button 
+                onClick={() => setIsBookingModalOpen(true)}
+                size="lg"
+                variant="outline"
+                className="w-full bg-white/10 hover:bg-white/20 border-white/20 text-white"
+              >
+                <Calendar className="size-4 mr-2" />
+                Book This Venue
+              </Button>
               <Link href="tel:+639123456789" className="block w-full mt-2">
                 <Button 
                   variant="outline"

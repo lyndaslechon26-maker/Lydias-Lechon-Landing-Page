@@ -153,16 +153,14 @@ export function CartModal() {
                 >
                   Clear Cart
                 </Button>
-                <Button
-                  className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
-                  onClick={() => {
-                    // TODO: Implement checkout
-                    closeCart()
-                    alert('Checkout feature coming soon!')
-                  }}
-                >
-                  Proceed to Checkout
-                </Button>
+                <Link href="/events/checkout" className="flex-1">
+                  <Button
+                    className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+                    onClick={closeCart}
+                  >
+                    Proceed to Checkout
+                  </Button>
+                </Link>
               </div>
 
               <Button
