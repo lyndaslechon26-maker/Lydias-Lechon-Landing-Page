@@ -65,7 +65,47 @@ export default async function DashboardPage() {
       {/* Stats Cards */}
       <section className="py-8 -mt-6">
         <div className="container mx-auto px-4">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Mobile: 2x2 Grid */}
+          <div className="grid grid-cols-2 gap-3 lg:hidden">
+            {/* Total Bookings */}
+            <div className="p-4 rounded-xl border bg-card shadow-md">
+              <div className="flex size-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 mb-2">
+                <CalendarCheck className="size-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <p className="text-xl font-bold mb-0.5">{totalBookings}</p>
+              <p className="text-xs text-muted-foreground">Total Bookings</p>
+            </div>
+
+            {/* Pending */}
+            <div className="p-4 rounded-xl border bg-card shadow-md">
+              <div className="flex size-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 mb-2">
+                <Clock className="size-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <p className="text-xl font-bold mb-0.5">{pendingBookings}</p>
+              <p className="text-xs text-muted-foreground">Pending</p>
+            </div>
+
+            {/* Confirmed */}
+            <div className="p-4 rounded-xl border bg-card shadow-md">
+              <div className="flex size-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 mb-2">
+                <CheckCircle className="size-5 text-green-600 dark:text-green-400" />
+              </div>
+              <p className="text-xl font-bold mb-0.5">{confirmedBookings}</p>
+              <p className="text-xs text-muted-foreground">Confirmed</p>
+            </div>
+
+            {/* Total Spent */}
+            <div className="p-4 rounded-xl border bg-card shadow-md">
+              <div className="flex size-10 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30 mb-2">
+                <CreditCard className="size-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <p className="text-xl font-bold mb-0.5">₱{totalSpent.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">Total Spent</p>
+            </div>
+          </div>
+
+          {/* Desktop: 4 Column Grid */}
+          <div className="hidden lg:grid gap-6 grid-cols-4">
             {/* Total Bookings */}
             <div className="p-6 rounded-2xl border bg-card shadow-lg">
               <div className="flex items-center justify-between mb-3">
@@ -117,7 +157,7 @@ export default async function DashboardPage() {
       <section className="py-8">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold mb-6">Quick Actions</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Link href="/events/dashboard/bookings">
               <div className="group p-6 rounded-xl border bg-card hover:shadow-lg hover:border-amber-600 transition-all">
                 <div className="flex items-start justify-between mb-3">
@@ -139,27 +179,14 @@ export default async function DashboardPage() {
                   </div>
                   <ChevronRight className="size-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                 </div>
-                <h3 className="font-semibold mb-1">New Booking</h3>
-                <p className="text-sm text-muted-foreground">Book a new event venue or package</p>
+                <h3 className="font-semibold mb-1">Reserve a Venue</h3>
+                <p className="text-sm text-muted-foreground">Book a venue for your event</p>
               </div>
             </Link>
 
             <div className="group p-6 rounded-xl border bg-card hover:shadow-lg hover:border-amber-600 transition-all cursor-pointer">
               <ReserveTableButton variant="card" />
             </div>
-
-            <Link href="/events/dashboard/profile">
-              <div className="group p-6 rounded-xl border bg-card hover:shadow-lg hover:border-amber-600 transition-all">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex size-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30 group-hover:bg-purple-600 dark:group-hover:bg-purple-600 transition-colors">
-                    <User className="size-6 text-purple-600 dark:text-purple-400 group-hover:text-white transition-colors" />
-                  </div>
-                  <ChevronRight className="size-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-                </div>
-                <h3 className="font-semibold mb-1">Profile Settings</h3>
-                <p className="text-sm text-muted-foreground">Update your account information</p>
-              </div>
-            </Link>
           </div>
         </div>
       </section>
